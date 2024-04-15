@@ -203,10 +203,10 @@ fun generateInputsBuilderNClass(n: Int, maxGenerated: Int = 8): TypeSpec {
     val star = WildcardTypeName.producerOf(ANY.copy(nullable = true))
     val nextType = TypeVariableName("T${n + 1}")
     val nextInputs =
-        if (n < maxGenerated) ClassName("com.rxnai.mall", "InputsBuilder${n + 1}")
+        if (n < maxGenerated) ClassName("com.resonai.mall", "InputsBuilder${n + 1}")
             .parameterizedBy(types)
             .plusParameter(nextType) else ClassName(
-            "com.rxnai.mall",
+            "com.resonai.mall",
             "InputAddable"
         ).parameterizedBy(star)
 
@@ -373,8 +373,7 @@ fun generateInputsNClass(n: Int): TypeSpec {
 const val MAX_INPUTS = 16
 
 fun main() {
-
-    val file = FileSpec.builder("com.rxnai.mall", "")
+    val file = FileSpec.builder("com.resonai.mall", "")
         .addImport("kotlinx.coroutines.flow", "combine", "map", "zip")
         .addImport("kotlinx.coroutines", "launch")
 
