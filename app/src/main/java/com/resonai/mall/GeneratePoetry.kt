@@ -1,32 +1,33 @@
 package com.resonai.mall
 
-import com.squareup.kotlinpoet.*
+import com.squareup.kotlinpoet.ANY
+import com.squareup.kotlinpoet.ClassName
+import com.squareup.kotlinpoet.FileSpec
+import com.squareup.kotlinpoet.FunSpec
+import com.squareup.kotlinpoet.KModifier
+import com.squareup.kotlinpoet.LambdaTypeName
+import com.squareup.kotlinpoet.ParameterSpec
+import com.squareup.kotlinpoet.ParameterizedTypeName
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
+import com.squareup.kotlinpoet.PropertySpec
+import com.squareup.kotlinpoet.TypeSpec
+import com.squareup.kotlinpoet.TypeVariableName
+import com.squareup.kotlinpoet.WildcardTypeName
+import com.squareup.kotlinpoet.asClassName
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.FlowCollector
 import kotlinx.coroutines.flow.MutableSharedFlow
 
-val INDEXWORDS = listOf(
-    "zeroth",
-    "first",
-    "second",
-    "third",
-    "fourth",
-    "fifth",
-    "sixth",
-    "seventh",
-    "eighth",
-    "nine",
-    "ten",
-    "eleven",
-    "twelve",
-    "thirteen",
-    "fourteen",
-    "fifteen",
-    "sixteen"
-)
+fun getOrdinal(n: Int): String {
+    val suffixes =
+        listOf("th", "st", "nd", "rd", "th", "th", "th", "th", "th", "th")
+    return when (n) {
+        11, 12, 13 -> n.toString() + "th"
+        else -> n.toString() + suffixes[n % 10]
+    }
+}
 
 private fun flowTupleNFnBuilder(n: Int, name: String):
         Pair<FunSpec.Builder, ParameterizedTypeName> {
@@ -75,16 +76,16 @@ private fun generateCombinerTupleNFn(n: Int, combiner: String): FunSpec {
     val fnBuilderPair = flowTupleNFnBuilder(n, combiner)
     when {
         n == 2 -> fnBuilderPair.first
-            .addStatement("return flow1.$combiner(flow2) { z1, z2 -> Pair(z1, z2) }")
+            .addStatement("return flow1.$combiner(flow2) { z1, z2 -> Tuple2nd(z1, z2) }")
 
         n > 2 -> {
             fnBuilderPair.first
                 .addStatement(
                     String.format(
                         "return ${combiner}TupleGen(%s).${combiner}(flow$n) { z, z2 -> %s(%s, z2)}",
-                        (1 until n).map { "flow$it" }.joinToString(),
+                        (1 until n).joinToString { "flow$it" },
                         fnBuilderPair.second.toString(),
-                        (1 until n).map { "z.${INDEXWORDS[it]}" }.joinToString()
+                        (1 until n).joinToString { "z.element${getOrdinal(it)}" }
                     )
                 )
         }
@@ -117,7 +118,11 @@ fun generateTupleNFnThrough(n: Int): FunSpec {
         .addTypeVariables(types)
         .addTypeVariable(rType)
         .addParameter(ParameterSpec.builder("fn", lambdaT).build())
-        .addStatement("return fn(${INDEXWORDS.slice(1..n).joinToString(", ")})")
+        .addStatement(
+            "return fn(${
+                (1..n).joinToString(", ") { "element${getOrdinal(it)}" }
+            })"
+        )
         .returns(rType)
 
     return fnBuilder.build()
@@ -318,7 +323,7 @@ fun generateInputsNClass(n: Int): TypeSpec {
 
     val rType = TypeVariableName("R")
     val transformParams = (1..n).map {
-        ParameterSpec.builder(INDEXWORDS[it], types[it - 1]).build()
+        ParameterSpec.builder(getOrdinal(it), types[it - 1]).build()
     }
     for (possibles in listOf(false, true)) {
         val opParam = LambdaTypeName.get(
@@ -370,31 +375,43 @@ fun generateInputsNClass(n: Int): TypeSpec {
         .build()
 }
 
-const val MAX_INPUTS = 16
+var MAX_INPUTS = 20
+var MIN_INPUTS = 2
 
 fun main() {
+    generateFile()
+}
+
+private fun generateFile() {
     val file = FileSpec.builder("com.resonai.mall", "")
         .addImport("kotlinx.coroutines.flow", "combine", "map", "zip")
         .addImport("kotlinx.coroutines", "launch")
 
-    for (n in 2..MAX_INPUTS) {
+    for (n in MIN_INPUTS..MAX_INPUTS) {
+        file.addType(generateTupleClass(n))
+    }
+
+    for (n in MIN_INPUTS..MAX_INPUTS) {
         file.addFunction(generateCombineTupleNFn(n))
     }
-    for (n in 2..MAX_INPUTS) {
+
+    for (n in MIN_INPUTS..MAX_INPUTS) {
         file.addFunction(generateCombinerTupleNFn(n, "zip"))
     }
-    for (n in 2..MAX_INPUTS) {
+
+    for (n in MIN_INPUTS..MAX_INPUTS) {
         file.addFunction(generateTupleNFnThrough(n))
     }
-    for (n in 2..MAX_INPUTS) {
+
+    for (n in MIN_INPUTS..MAX_INPUTS) {
         file.addType(generateInputsBuilderNClass(n, MAX_INPUTS))
     }
 
-    for (n in 2..MAX_INPUTS) {
+    for (n in MIN_INPUTS..MAX_INPUTS) {
         file.addType(generateInputsNClass(n))
     }
 
-    for (n in 2..MAX_INPUTS) {
+    for (n in MIN_INPUTS..MAX_INPUTS) {
         file.addFunction(generateCoroutineOpNFn(n))
         file.addFunction(generateCoroutineOpNFn(n, true))
     }
