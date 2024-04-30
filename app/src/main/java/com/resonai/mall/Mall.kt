@@ -10,47 +10,49 @@ import com.resonai.mall.GenerateTuples.generateTupleClass
 import com.squareup.kotlinpoet.FileSpec
 import java.io.File
 
-var MAX_INPUTS = 20
-var MIN_INPUTS = 2
 internal const val PACKAGE_NAME = "com.resonai.mall"
+internal var maxInputs = 20
+private var minInputs = 2
 
-fun main() {
-    generatePoetry(projectPath = "app/src/main/java")
+fun main(args: Array<String>) {
+    val inputs = if (args.isNotEmpty()) args[0].toInt() else 0
+    maxInputs = inputs
+    generatePoetry()
 }
 
-fun generatePoetry(projectPath: String) {
+private fun generatePoetry() {
     val file = FileSpec.builder(PACKAGE_NAME, "Poetry")
         .addImport("kotlinx.coroutines.flow", "combine", "map", "zip")
         .addImport("kotlinx.coroutines", "launch")
 
-    for (n in MIN_INPUTS..MAX_INPUTS) {
+    for (n in minInputs..maxInputs) {
         file.addType(generateTupleClass(n))
     }
 
-    for (n in MIN_INPUTS..MAX_INPUTS) {
+    for (n in minInputs..maxInputs) {
         file.addFunction(generateCombineTupleNFn(n))
     }
 
-    for (n in MIN_INPUTS..MAX_INPUTS) {
+    for (n in minInputs..maxInputs) {
         file.addFunction(generateCombinerTupleNFn(n, "zip"))
     }
 
-    for (n in MIN_INPUTS..MAX_INPUTS) {
+    for (n in minInputs..maxInputs) {
         file.addFunction(generateTupleNFnThrough(n))
     }
 
-    for (n in MIN_INPUTS..MAX_INPUTS) {
-        file.addType(generateInputsBuilderNClass(n, MAX_INPUTS))
+    for (n in minInputs..maxInputs) {
+        file.addType(generateInputsBuilderNClass(n, maxInputs))
     }
 
-    for (n in MIN_INPUTS..MAX_INPUTS) {
+    for (n in minInputs..maxInputs) {
         file.addType(generateInputsNClass(n))
     }
 
-    for (n in MIN_INPUTS..MAX_INPUTS) {
+    for (n in minInputs..maxInputs) {
         file.addFunction(generateCoroutineOpNFn(n))
         file.addFunction(generateCoroutineOpNFn(n, true))
     }
 
-    file.build().writeTo(File(projectPath))
+    file.build().writeTo(File("app/src/main/java"))
 }

@@ -8,8 +8,8 @@ internal object GenerateTuples {
     fun tupleTypeForN(
         n: Int, typeArguments: List<TypeName>
     ): ParameterizedTypeName {
-        require(n in 2..MAX_INPUTS) {
-            "Tuple size must be between 2 and $MAX_INPUTS"
+        require(n in 2..maxInputs) {
+            "Tuple size must be between 2 and $maxInputs"
         }
 
         val className = ClassName(PACKAGE_NAME, "Tuple${getOrdinal(n)}")
