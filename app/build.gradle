@@ -20,15 +20,19 @@ publishing {
 }
 
 java {
-    sourceCompatibility = JavaVersion.VERSION_11
-    targetCompatibility = JavaVersion.VERSION_11
+    sourceCompatibility = JavaVersion.VERSION_17
+    targetCompatibility = JavaVersion.VERSION_17
+
+    toolchain {
+        languageVersion.set(JavaLanguageVersion.of(17))
+    }
 }
 
 // Based on https://stackoverflow.com/a/61790653
 task runGenerator(type: JavaExec) {
     group = 'kotlinpoet'
     classpath = sourceSets.main.runtimeClasspath
-    main = 'com.resonai.mall.GeneratePoetryKt'
+    main = 'com.resonai.mall.MallKt'
     // store the output instead of printing to the console:
     standardOutput = new ByteArrayOutputStream()
     // extension method genSource.output() can be used to obtain the output:
