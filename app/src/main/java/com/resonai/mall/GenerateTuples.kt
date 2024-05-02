@@ -1,7 +1,7 @@
 package com.resonai.mall
 
 import com.resonai.mall.GeneratePoetry.getOrdinal
-import com.resonai.mall.Mall.maxInputs
+import com.resonai.mall.Mall.MAX_INPUTS
 import com.squareup.kotlinpoet.*
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 
@@ -9,8 +9,8 @@ internal object GenerateTuples {
     fun tupleTypeForN(
         n: Int, typeArguments: List<TypeName>
     ): ParameterizedTypeName {
-        require(n in 2..maxInputs) {
-            "Tuple size must be between 2 and $maxInputs"
+        require(n in 2..MAX_INPUTS) {
+            "Tuple size must be between 2 and $MAX_INPUTS"
         }
 
         val className = ClassName(PACKAGE_NAME, "Tuple${getOrdinal(n)}")

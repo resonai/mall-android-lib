@@ -7,20 +7,24 @@ import com.resonai.mall.GeneratePoetry.generateInputsBuilderNClass
 import com.resonai.mall.GeneratePoetry.generateInputsNClass
 import com.resonai.mall.GeneratePoetry.generateTupleNFnThrough
 import com.resonai.mall.GenerateTuples.generateTupleClass
-import com.resonai.mall.Mall.generatePoetry
-import com.resonai.mall.Mall.maxInputs
 import com.squareup.kotlinpoet.FileSpec
 import java.io.File
 
-internal const val PACKAGE_NAME = "com.resonai.mall"
+internal var PACKAGE_NAME = "com.resonai.mall"
 
 object Mall {
 
-    var maxInputs = 20
+    internal var MAX_INPUTS = 20
     private var minInputs = 2
 
-    fun generatePoetry(maxInputs: Int = 20) {
-        val file = FileSpec.builder(PACKAGE_NAME, "Poetry")
+    fun generatePoetry(
+        maxInputs: Int = 20,
+        packageName: String = "com.resonai.mall",
+        filePath: String = "app/src/main/java"
+    ) {
+        PACKAGE_NAME = packageName
+        MAX_INPUTS = maxInputs
+        val file = FileSpec.builder(packageName, "Poetry")
             .addImport("kotlinx.coroutines.flow", "combine", "map", "zip")
             .addImport("kotlinx.coroutines", "launch")
 
@@ -53,12 +57,6 @@ object Mall {
             file.addFunction(generateCoroutineOpNFn(n, true))
         }
 
-        file.build().writeTo(File("app/src/main/java"))
+        file.build().writeTo(File(filePath))
     }
-}
-
-fun main(args: Array<String>) {
-    val inputs = if (args.isNotEmpty()) args[0].toInt() else 0
-    maxInputs = inputs
-    generatePoetry()
 }

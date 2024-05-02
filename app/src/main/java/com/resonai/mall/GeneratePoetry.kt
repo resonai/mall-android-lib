@@ -3,7 +3,6 @@ package com.resonai.mall
 import com.resonai.mall.GenerateTuples.tupleTypeForN
 import com.squareup.kotlinpoet.ANY
 import com.squareup.kotlinpoet.ClassName
-import com.squareup.kotlinpoet.FileSpec
 import com.squareup.kotlinpoet.FunSpec
 import com.squareup.kotlinpoet.KModifier
 import com.squareup.kotlinpoet.LambdaTypeName
@@ -214,12 +213,13 @@ public fun <T1, T2, R> CoroutineScope.op(
         val star = WildcardTypeName.producerOf(ANY.copy(nullable = true))
         val nextType = TypeVariableName("T${n + 1}")
         val nextInputs =
-            if (n < maxGenerated) ClassName(PACKAGE_NAME, "InputsBuilder${n + 1}")
-                .parameterizedBy(types)
-                .plusParameter(nextType) else ClassName(
-                PACKAGE_NAME,
-                "InputAddable"
-            ).parameterizedBy(star)
+            if (n < maxGenerated) {
+                ClassName(PACKAGE_NAME, "InputsBuilder${n + 1}")
+                    .parameterizedBy(types)
+                    .plusParameter(nextType)
+            } else {
+                ClassName(PACKAGE_NAME, "InputAddable").parameterizedBy(star)
+            }
 
         val addInputFn = FunSpec.builder("addInput")
             .addTypeVariable(nextType)
