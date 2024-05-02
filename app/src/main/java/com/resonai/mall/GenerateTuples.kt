@@ -1,6 +1,7 @@
 package com.resonai.mall
 
 import com.resonai.mall.GeneratePoetry.getOrdinal
+import com.resonai.mall.Mall.maxInputs
 import com.squareup.kotlinpoet.*
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 
