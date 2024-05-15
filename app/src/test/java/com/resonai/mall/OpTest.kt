@@ -6,6 +6,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.runTest
 import org.junit.Test
+import kotlin.math.max
 import kotlin.test.assertEquals
 
 fun <A, B> pairThem(a: A, b: B): Pair<A, B> = Pair(a, b)
@@ -115,6 +116,85 @@ class OpTest {
         }
         job.join()
         assertEquals(numReceived, numTriggers * 2 + 1)
+        job.cancel()
+    }
+
+    @Test
+    fun updaterTest() = runTest {
+        val flow1 = MallNode(-1)
+        val flow2 = MallNode("")
+        val numTriggers = 30
+        var numReceived = 0
+        val MAX_STRING_LENGTH = 30
+        val scope = CoroutineScope(Dispatchers.Unconfined)
+        val updater1 = { i: Int ->
+            { j: String ->
+                val res = if (i > 0 && j.length < MAX_STRING_LENGTH) j.repeat(i) else "$i"
+                res
+            }
+        }
+        scope.up(flow1.trigger, updater1, flow2)
+        val job = scope.launch {
+            val turbine = flow2.testIn(this)
+            assertEquals("-1", turbine.awaitItem())
+            numReceived++
+            var numberString = "0"
+            for (it in 0 until numTriggers) {
+                numberString = numberString.repeat(if (it > 0) it else 1)
+                if (numberString.length > MAX_STRING_LENGTH * if (it > 0) it else 1) numberString = "$it"
+                assertEquals(numberString, turbine.awaitItem())
+                numReceived++
+            }
+            assertEquals(listOf(), turbine.cancelAndConsumeRemainingEvents())
+        }
+
+        repeat(numTriggers) { i ->
+            flow1.emit(i)
+        }
+        job.join()
+        assertEquals(numTriggers + 1, numReceived)
+        job.cancel()
+    }
+
+    @Test
+    fun multiUpdaterTest() = runTest {
+        val flow1 = MallNode(0)
+        val flow2 = MallNode(0)
+        val flow3 = MallNode(0)
+        val flow4 = MallNode(0)
+        val numTriggers = 100
+        var numReceived = 0
+        val scope = CoroutineScope(Dispatchers.Unconfined)
+        val updater = { i: Int, j: Int, k: Int ->
+            { l: Int ->
+                l + max(i, max(j, k))
+            }
+        }
+        scope.up(flow1.trigger, flow2.trigger, flow3.trigger, updater, flow4)
+        val job = scope.launch {
+            val turbine = flow4.testIn(this)
+            var total = 0
+            assertEquals(total, turbine.awaitItem())
+            numReceived++
+            for (it in 1..numTriggers) {
+                total += it
+                val turbineGot = turbine.awaitItem()
+                assertEquals(total, turbineGot)
+                numReceived++
+            }
+            assertEquals(listOf(), turbine.cancelAndConsumeRemainingEvents())
+        }
+        repeat(numTriggers) {
+            val ourFlow = when ((1..3).random()) {
+                1 -> flow1
+                2 -> flow2
+                3 -> flow3
+                else -> throw AssertionError("Impossible is nothing!")
+            }
+            ourFlow.emit(it + 1)
+        }
+        job.join()
+        assertEquals(numTriggers + 1, numReceived)
         job.cancel()
     }
 }

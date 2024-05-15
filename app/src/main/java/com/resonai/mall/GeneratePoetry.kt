@@ -136,7 +136,7 @@ public fun <T1, T2, R> CoroutineScope.op(
   `out`: MutableSharedFlow<R>,
 ) = Input2(inFlow1, inFlow2).transform(this, out, transform)
  */
-fun generateCoroutineOpNFn(n: Int, possibles: Boolean = false): FunSpec {
+fun generateCoroutineOpNFn(n: Int): List<FunSpec> {
     // n > 1
     assert(n > 1)
     val types = (1..n).map { TypeVariableName("T$it") }
@@ -150,35 +150,41 @@ fun generateCoroutineOpNFn(n: Int, possibles: Boolean = false): FunSpec {
             InFlow::class.asClassName().parameterizedBy(types[it - 1])
         ).build()
     }
-
-    val lambdaT = LambdaTypeName.get(
-        parameters = transformParams,
-        returnType = if (possibles) {
-            PossibleResult::class.asClassName().parameterizedBy(rType)
-        } else {
-            rType
-        }
-    )
-
-    val fnBuilder = FunSpec.builder(if (possibles) "opp" else "op")
-        .receiver(CoroutineScope::class)
-        .addKdoc("AUTOGEN(KotlinPoet) generateCoroutineOpNFn(%L, %L)", n, possibles)
-        .addTypeVariables(types)
-        .addTypeVariable(rType)
-        .addParameters(inFlowParams)
-        .addParameter(ParameterSpec.builder("transform", lambdaT).build())
-        .addParameter(
-            ParameterSpec.builder(
-                "out",
-                MutableSharedFlow::class.asClassName().parameterizedBy(rType)
+    val rToRType = LambdaTypeName.get(parameters =
+    listOf(ParameterSpec.builder("", rType).build()), returnType = rType)
+    return mapOf(
+        "op" to Pair("transform", LambdaTypeName.get(
+            parameters = transformParams,
+            returnType = rType)),
+        "opp" to Pair("transformFilter", LambdaTypeName.get(
+            parameters = transformParams,
+            returnType = PossibleResult::class.asClassName().parameterizedBy(rType))),
+        "up" to Pair("transformUpdate", LambdaTypeName.get(
+            parameters = transformParams,
+            returnType = rToRType))
+    ).map { (funName, transformNameAndOpParams) ->
+        FunSpec.builder(funName)
+            .receiver(CoroutineScope::class)
+            .addKdoc(
+                "AUTOGEN(KotlinPoet) generateCoroutineOpNFn(%L)",
+                n
+            )
+            .addTypeVariables(types)
+            .addTypeVariable(rType)
+            .addParameters(inFlowParams)
+            .addParameter(
+                ParameterSpec.builder("transform", transformNameAndOpParams.second).build())
+            .addParameter(
+                ParameterSpec.builder(
+                    "out",
+                    MutableSharedFlow::class.asClassName().parameterizedBy(rType)
+                ).build()
+            )
+            .addStatement(
+                "return Input$n(${(1..n).joinToString(", ") { "inFlow$it" }})" +
+                        ".${transformNameAndOpParams.first}(this, out, transform)"
             ).build()
-        )
-        .addStatement(
-            "return Input$n(${(1..n).map { "inFlow$it" }.joinToString(", ")})" +
-                    ".transform${if (possibles) "Filter" else ""}(this, out, transform)"
-        )
-
-    return fnBuilder.build()
+    }
 }
 
 fun generateInputsBuilderNClass(n: Int, maxGenerated: Int = 8): TypeSpec {
@@ -228,7 +234,7 @@ fun generateInputsBuilderNClass(n: Int, maxGenerated: Int = 8): TypeSpec {
         .addStatement(
             if (n < maxGenerated) String.format(
                 "return InputsBuilder${n + 1}(%s, inFlow)",
-                (1..n).map { "inFlow$it" }.joinToString()
+                (1..n).joinToString { "inFlow$it" }
             ) else "TODO(\"Too many inputs\")"
         )
         .build()
@@ -243,7 +249,7 @@ fun generateInputsBuilderNClass(n: Int, maxGenerated: Int = 8): TypeSpec {
         .addStatement(
             String.format(
                 "return InputsBuilder()%s.build()",
-                (1..n).map { ".addInput(inFlow$it)" }.joinToString("")
+                (1..n).joinToString("") { ".addInput(inFlow$it)" }
             )
         )
         .build()
@@ -258,7 +264,7 @@ fun generateInputsBuilderNClass(n: Int, maxGenerated: Int = 8): TypeSpec {
                         "\t%s(%s)\n" +
                         "}\n",
                 tupleType.rawType,
-                (1..n).map { "it[${it - 1}] as T$it" }.joinToString()
+                (1..n).joinToString { "it[${it - 1}] as T$it" }
             )
         )
         .build()
@@ -310,7 +316,7 @@ fun generateInputsNClass(n: Int): TypeSpec {
         .addStatement(
             String.format(
                 "return InputsBuilderEmpty()%s.build()",
-                (1..n).map { ".addInput(inFlow$it)" }.joinToString("")
+                (1..n).joinToString("") { ".addInput(inFlow$it)" }
             )
         )
         .build()
@@ -325,18 +331,27 @@ fun generateInputsNClass(n: Int): TypeSpec {
     val transformParams = (1..n).map {
         ParameterSpec.builder(getOrdinal(it), types[it - 1]).build()
     }
-    for (possibles in listOf(false, true)) {
-        val opParam = LambdaTypeName.get(
-            parameters = transformParams,
-            returnType = if (possibles) {
-                PossibleResult::class.asClassName().parameterizedBy(rType)
-            } else {
-                rType
-            }
-        )
+    val rToRType = LambdaTypeName.get(parameters =
+    listOf(ParameterSpec.builder("", rType).build()), returnType = rType)
 
-        val funName = if (possibles) "transformFilter" else "transform"
-        val transformFn = FunSpec.builder(funName)
+    val transformMethods: Map<String, Pair<String, LambdaTypeName>> = mapOf(
+        "transform"
+                to Pair("        to.emit(it)\n",
+            LambdaTypeName.get(
+                parameters = transformParams, returnType = rType)),
+        "transformFilter"
+                to Pair("      if (it.shouldEmit) {\n        to.emit(it.result)\n      }\n",
+            LambdaTypeName.get(
+                parameters = transformParams,
+                returnType = PossibleResult::class.asClassName().parameterizedBy(rType))),
+        "transformUpdate"
+                to Pair("      to.update(it) \n",
+            LambdaTypeName.get(
+                parameters = transformParams,
+                returnType = rToRType)))
+
+    transformMethods.map { (funName, collectBodyAndOpParams) ->
+        FunSpec.builder(funName)
             .addTypeVariable(rType)
             .addParameter(
                 ParameterSpec.builder(
@@ -347,10 +362,10 @@ fun generateInputsNClass(n: Int): TypeSpec {
             .addParameter(
                 ParameterSpec.builder(
                     "to",
-                    FlowCollector::class.asClassName().parameterizedBy(rType)
+                    MutableSharedFlow::class.asClassName().parameterizedBy(rType)
                 ).build()
             )
-            .addParameter(ParameterSpec.builder("op", opParam).build())
+            .addParameter(ParameterSpec.builder("op", collectBodyAndOpParams.second).build())
             .returns(Job::class.asClassName())
             .addStatement(
                 "return scope.launch {\n" +
@@ -360,16 +375,13 @@ fun generateInputsNClass(n: Int): TypeSpec {
                         // TODO(ShirL) We may be able to save ourselves some code by using
                         // the built-in transform function, which behaves like map+filter
                         // https://kotlinlang.org/api/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines.flow/transform.html
-                        (if (possibles) "      if (it.shouldEmit) {\n" else "") +
-                        "        to.emit(it${if (possibles) ".result" else ""})\n" +
-                        (if (possibles) "      }\n" else "") +
+                        collectBodyAndOpParams.first +
                         "    }\n" +
                         "  }"
             )
             .build()
-        builder
-            .addFunction(transformFn)
-    }
+    }.forEach { builder
+        .addFunction(it) }
 
     return builder
         .build()
@@ -398,11 +410,9 @@ private fun generateFile() {
     for (n in MIN_INPUTS..MAX_INPUTS) {
         file.addFunction(generateCombinerTupleNFn(n, "zip"))
     }
-
     for (n in MIN_INPUTS..MAX_INPUTS) {
         file.addFunction(generateTupleNFnThrough(n))
     }
-
     for (n in MIN_INPUTS..MAX_INPUTS) {
         file.addType(generateInputsBuilderNClass(n, MAX_INPUTS))
     }
@@ -412,8 +422,7 @@ private fun generateFile() {
     }
 
     for (n in MIN_INPUTS..MAX_INPUTS) {
-        file.addFunction(generateCoroutineOpNFn(n))
-        file.addFunction(generateCoroutineOpNFn(n, true))
+        generateCoroutineOpNFn(n).forEach { file.addFunction(it) }
     }
 
     file.build().writeTo(System.out)

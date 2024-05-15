@@ -24,6 +24,18 @@ fun <T1, R> CoroutineScope.op(
     }
 }
 
+fun <T1, R> CoroutineScope.up(
+    inFlow1: InFlow<T1>,
+    transform: (T1) -> (R) -> R,
+    out: MutableSharedFlow<R>
+) {
+    launch {
+        inFlow1.flow.map(transform).collect {
+            out.update(it)
+        }
+    }
+}
+
 fun <T1, R> CoroutineScope.opp(
     inFlow1: InFlow<T1>,
     transform: (T1) -> PossibleResult<R>,

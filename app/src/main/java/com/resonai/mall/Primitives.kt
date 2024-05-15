@@ -18,6 +18,19 @@ fun <T> MallNode(initial: T): MutableSharedFlow<T> {
     return shared
 }
 
+inline fun <T> MutableSharedFlow<T>.update(function: (T) -> T) {
+    synchronized(this) {
+        // TODO[ShirL) Confirm that this implementation is sufficiently efficient vs
+        // the implementation in StateFlow
+        // (https://github.com/Kotlin/kotlinx.coroutines/blob/master/kotlinx-coroutines-core/common/src/flow/StateFlow.kt#L321)
+        // or use of Mutex
+        // (https://kotlinlang.org/api/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines.sync/-mutex/)
+        val prevValue = value
+        val nextValue = function(prevValue)
+        tryEmit(nextValue)
+    }
+}
+
 val <T> SharedFlow<T>.value: T
     get() = replayCache.last()
 
