@@ -182,7 +182,7 @@ class MallTest {
         val in2 = Input2(zip(flow1), zip(flow2))
         val job = launch(Dispatchers.Unconfined) {
             val flow3 = in2.gather().map {
-                it.first + it.second
+                it.element1st + it.element2nd
             }.stateIn(this)
             val turbine = flow3.testIn(this)
             repeat(numTriggers) { i ->

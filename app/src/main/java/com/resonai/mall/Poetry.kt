@@ -4,7 +4,6 @@ import kotlin.collections.List
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.FlowCollector
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
@@ -2099,7 +2098,7 @@ public class Input2<T1, T2>(
 
   public fun <R> transform(
     scope: CoroutineScope,
-    to: FlowCollector<R>,
+    to: MutableSharedFlow<R>,
     op: (`1st`: T1, `2nd`: T2) -> R,
   ): Job = scope.launch {
       gather().map {
@@ -2111,7 +2110,7 @@ public class Input2<T1, T2>(
 
   public fun <R> transformFilter(
     scope: CoroutineScope,
-    to: FlowCollector<R>,
+    to: MutableSharedFlow<R>,
     op: (`1st`: T1, `2nd`: T2) -> PossibleResult<R>,
   ): Job = scope.launch {
       gather().map {
@@ -2120,6 +2119,18 @@ public class Input2<T1, T2>(
         if (it.shouldEmit) {
           to.emit(it.result)
         }
+      }
+    }
+
+  public fun <R> transformUpdate(
+    scope: CoroutineScope,
+    to: MutableSharedFlow<R>,
+    op: (`1st`: T1, `2nd`: T2) -> ((R) -> R),
+  ): Job = scope.launch {
+      gather().map {
+        it.throughGen(op)
+      }.collect {
+        to.update(it) 
       }
     }
 }
@@ -2134,7 +2145,7 @@ public class Input3<T1, T2, T3>(
 
   public fun <R> transform(
     scope: CoroutineScope,
-    to: FlowCollector<R>,
+    to: MutableSharedFlow<R>,
     op: (
       `1st`: T1,
       `2nd`: T2,
@@ -2150,7 +2161,7 @@ public class Input3<T1, T2, T3>(
 
   public fun <R> transformFilter(
     scope: CoroutineScope,
-    to: FlowCollector<R>,
+    to: MutableSharedFlow<R>,
     op: (
       `1st`: T1,
       `2nd`: T2,
@@ -2163,6 +2174,22 @@ public class Input3<T1, T2, T3>(
         if (it.shouldEmit) {
           to.emit(it.result)
         }
+      }
+    }
+
+  public fun <R> transformUpdate(
+    scope: CoroutineScope,
+    to: MutableSharedFlow<R>,
+    op: (
+      `1st`: T1,
+      `2nd`: T2,
+      `3rd`: T3,
+    ) -> ((R) -> R),
+  ): Job = scope.launch {
+      gather().map {
+        it.throughGen(op)
+      }.collect {
+        to.update(it) 
       }
     }
 }
@@ -2178,7 +2205,7 @@ public class Input4<T1, T2, T3, T4>(
 
   public fun <R> transform(
     scope: CoroutineScope,
-    to: FlowCollector<R>,
+    to: MutableSharedFlow<R>,
     op: (
       `1st`: T1,
       `2nd`: T2,
@@ -2195,7 +2222,7 @@ public class Input4<T1, T2, T3, T4>(
 
   public fun <R> transformFilter(
     scope: CoroutineScope,
-    to: FlowCollector<R>,
+    to: MutableSharedFlow<R>,
     op: (
       `1st`: T1,
       `2nd`: T2,
@@ -2209,6 +2236,23 @@ public class Input4<T1, T2, T3, T4>(
         if (it.shouldEmit) {
           to.emit(it.result)
         }
+      }
+    }
+
+  public fun <R> transformUpdate(
+    scope: CoroutineScope,
+    to: MutableSharedFlow<R>,
+    op: (
+      `1st`: T1,
+      `2nd`: T2,
+      `3rd`: T3,
+      `4th`: T4,
+    ) -> ((R) -> R),
+  ): Job = scope.launch {
+      gather().map {
+        it.throughGen(op)
+      }.collect {
+        to.update(it) 
       }
     }
 }
@@ -2225,7 +2269,7 @@ public class Input5<T1, T2, T3, T4, T5>(
 
   public fun <R> transform(
     scope: CoroutineScope,
-    to: FlowCollector<R>,
+    to: MutableSharedFlow<R>,
     op: (
       `1st`: T1,
       `2nd`: T2,
@@ -2243,7 +2287,7 @@ public class Input5<T1, T2, T3, T4, T5>(
 
   public fun <R> transformFilter(
     scope: CoroutineScope,
-    to: FlowCollector<R>,
+    to: MutableSharedFlow<R>,
     op: (
       `1st`: T1,
       `2nd`: T2,
@@ -2258,6 +2302,24 @@ public class Input5<T1, T2, T3, T4, T5>(
         if (it.shouldEmit) {
           to.emit(it.result)
         }
+      }
+    }
+
+  public fun <R> transformUpdate(
+    scope: CoroutineScope,
+    to: MutableSharedFlow<R>,
+    op: (
+      `1st`: T1,
+      `2nd`: T2,
+      `3rd`: T3,
+      `4th`: T4,
+      `5th`: T5,
+    ) -> ((R) -> R),
+  ): Job = scope.launch {
+      gather().map {
+        it.throughGen(op)
+      }.collect {
+        to.update(it) 
       }
     }
 }
@@ -2275,7 +2337,7 @@ public class Input6<T1, T2, T3, T4, T5, T6>(
 
   public fun <R> transform(
     scope: CoroutineScope,
-    to: FlowCollector<R>,
+    to: MutableSharedFlow<R>,
     op: (
       `1st`: T1,
       `2nd`: T2,
@@ -2294,7 +2356,7 @@ public class Input6<T1, T2, T3, T4, T5, T6>(
 
   public fun <R> transformFilter(
     scope: CoroutineScope,
-    to: FlowCollector<R>,
+    to: MutableSharedFlow<R>,
     op: (
       `1st`: T1,
       `2nd`: T2,
@@ -2310,6 +2372,25 @@ public class Input6<T1, T2, T3, T4, T5, T6>(
         if (it.shouldEmit) {
           to.emit(it.result)
         }
+      }
+    }
+
+  public fun <R> transformUpdate(
+    scope: CoroutineScope,
+    to: MutableSharedFlow<R>,
+    op: (
+      `1st`: T1,
+      `2nd`: T2,
+      `3rd`: T3,
+      `4th`: T4,
+      `5th`: T5,
+      `6th`: T6,
+    ) -> ((R) -> R),
+  ): Job = scope.launch {
+      gather().map {
+        it.throughGen(op)
+      }.collect {
+        to.update(it) 
       }
     }
 }
@@ -2328,7 +2409,7 @@ public class Input7<T1, T2, T3, T4, T5, T6, T7>(
 
   public fun <R> transform(
     scope: CoroutineScope,
-    to: FlowCollector<R>,
+    to: MutableSharedFlow<R>,
     op: (
       `1st`: T1,
       `2nd`: T2,
@@ -2348,7 +2429,7 @@ public class Input7<T1, T2, T3, T4, T5, T6, T7>(
 
   public fun <R> transformFilter(
     scope: CoroutineScope,
-    to: FlowCollector<R>,
+    to: MutableSharedFlow<R>,
     op: (
       `1st`: T1,
       `2nd`: T2,
@@ -2365,6 +2446,26 @@ public class Input7<T1, T2, T3, T4, T5, T6, T7>(
         if (it.shouldEmit) {
           to.emit(it.result)
         }
+      }
+    }
+
+  public fun <R> transformUpdate(
+    scope: CoroutineScope,
+    to: MutableSharedFlow<R>,
+    op: (
+      `1st`: T1,
+      `2nd`: T2,
+      `3rd`: T3,
+      `4th`: T4,
+      `5th`: T5,
+      `6th`: T6,
+      `7th`: T7,
+    ) -> ((R) -> R),
+  ): Job = scope.launch {
+      gather().map {
+        it.throughGen(op)
+      }.collect {
+        to.update(it) 
       }
     }
 }
@@ -2384,7 +2485,7 @@ public class Input8<T1, T2, T3, T4, T5, T6, T7, T8>(
 
   public fun <R> transform(
     scope: CoroutineScope,
-    to: FlowCollector<R>,
+    to: MutableSharedFlow<R>,
     op: (
       `1st`: T1,
       `2nd`: T2,
@@ -2405,7 +2506,7 @@ public class Input8<T1, T2, T3, T4, T5, T6, T7, T8>(
 
   public fun <R> transformFilter(
     scope: CoroutineScope,
-    to: FlowCollector<R>,
+    to: MutableSharedFlow<R>,
     op: (
       `1st`: T1,
       `2nd`: T2,
@@ -2423,6 +2524,27 @@ public class Input8<T1, T2, T3, T4, T5, T6, T7, T8>(
         if (it.shouldEmit) {
           to.emit(it.result)
         }
+      }
+    }
+
+  public fun <R> transformUpdate(
+    scope: CoroutineScope,
+    to: MutableSharedFlow<R>,
+    op: (
+      `1st`: T1,
+      `2nd`: T2,
+      `3rd`: T3,
+      `4th`: T4,
+      `5th`: T5,
+      `6th`: T6,
+      `7th`: T7,
+      `8th`: T8,
+    ) -> ((R) -> R),
+  ): Job = scope.launch {
+      gather().map {
+        it.throughGen(op)
+      }.collect {
+        to.update(it) 
       }
     }
 }
@@ -2443,7 +2565,7 @@ public class Input9<T1, T2, T3, T4, T5, T6, T7, T8, T9>(
 
   public fun <R> transform(
     scope: CoroutineScope,
-    to: FlowCollector<R>,
+    to: MutableSharedFlow<R>,
     op: (
       `1st`: T1,
       `2nd`: T2,
@@ -2465,7 +2587,7 @@ public class Input9<T1, T2, T3, T4, T5, T6, T7, T8, T9>(
 
   public fun <R> transformFilter(
     scope: CoroutineScope,
-    to: FlowCollector<R>,
+    to: MutableSharedFlow<R>,
     op: (
       `1st`: T1,
       `2nd`: T2,
@@ -2484,6 +2606,28 @@ public class Input9<T1, T2, T3, T4, T5, T6, T7, T8, T9>(
         if (it.shouldEmit) {
           to.emit(it.result)
         }
+      }
+    }
+
+  public fun <R> transformUpdate(
+    scope: CoroutineScope,
+    to: MutableSharedFlow<R>,
+    op: (
+      `1st`: T1,
+      `2nd`: T2,
+      `3rd`: T3,
+      `4th`: T4,
+      `5th`: T5,
+      `6th`: T6,
+      `7th`: T7,
+      `8th`: T8,
+      `9th`: T9,
+    ) -> ((R) -> R),
+  ): Job = scope.launch {
+      gather().map {
+        it.throughGen(op)
+      }.collect {
+        to.update(it) 
       }
     }
 }
@@ -2505,7 +2649,7 @@ public class Input10<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10>(
 
   public fun <R> transform(
     scope: CoroutineScope,
-    to: FlowCollector<R>,
+    to: MutableSharedFlow<R>,
     op: (
       `1st`: T1,
       `2nd`: T2,
@@ -2528,7 +2672,7 @@ public class Input10<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10>(
 
   public fun <R> transformFilter(
     scope: CoroutineScope,
-    to: FlowCollector<R>,
+    to: MutableSharedFlow<R>,
     op: (
       `1st`: T1,
       `2nd`: T2,
@@ -2548,6 +2692,29 @@ public class Input10<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10>(
         if (it.shouldEmit) {
           to.emit(it.result)
         }
+      }
+    }
+
+  public fun <R> transformUpdate(
+    scope: CoroutineScope,
+    to: MutableSharedFlow<R>,
+    op: (
+      `1st`: T1,
+      `2nd`: T2,
+      `3rd`: T3,
+      `4th`: T4,
+      `5th`: T5,
+      `6th`: T6,
+      `7th`: T7,
+      `8th`: T8,
+      `9th`: T9,
+      `10th`: T10,
+    ) -> ((R) -> R),
+  ): Job = scope.launch {
+      gather().map {
+        it.throughGen(op)
+      }.collect {
+        to.update(it) 
       }
     }
 }
@@ -2570,7 +2737,7 @@ public class Input11<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11>(
 
   public fun <R> transform(
     scope: CoroutineScope,
-    to: FlowCollector<R>,
+    to: MutableSharedFlow<R>,
     op: (
       `1st`: T1,
       `2nd`: T2,
@@ -2594,7 +2761,7 @@ public class Input11<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11>(
 
   public fun <R> transformFilter(
     scope: CoroutineScope,
-    to: FlowCollector<R>,
+    to: MutableSharedFlow<R>,
     op: (
       `1st`: T1,
       `2nd`: T2,
@@ -2615,6 +2782,30 @@ public class Input11<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11>(
         if (it.shouldEmit) {
           to.emit(it.result)
         }
+      }
+    }
+
+  public fun <R> transformUpdate(
+    scope: CoroutineScope,
+    to: MutableSharedFlow<R>,
+    op: (
+      `1st`: T1,
+      `2nd`: T2,
+      `3rd`: T3,
+      `4th`: T4,
+      `5th`: T5,
+      `6th`: T6,
+      `7th`: T7,
+      `8th`: T8,
+      `9th`: T9,
+      `10th`: T10,
+      `11th`: T11,
+    ) -> ((R) -> R),
+  ): Job = scope.launch {
+      gather().map {
+        it.throughGen(op)
+      }.collect {
+        to.update(it) 
       }
     }
 }
@@ -2638,7 +2829,7 @@ public class Input12<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12>(
 
   public fun <R> transform(
     scope: CoroutineScope,
-    to: FlowCollector<R>,
+    to: MutableSharedFlow<R>,
     op: (
       `1st`: T1,
       `2nd`: T2,
@@ -2663,7 +2854,7 @@ public class Input12<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12>(
 
   public fun <R> transformFilter(
     scope: CoroutineScope,
-    to: FlowCollector<R>,
+    to: MutableSharedFlow<R>,
     op: (
       `1st`: T1,
       `2nd`: T2,
@@ -2685,6 +2876,31 @@ public class Input12<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12>(
         if (it.shouldEmit) {
           to.emit(it.result)
         }
+      }
+    }
+
+  public fun <R> transformUpdate(
+    scope: CoroutineScope,
+    to: MutableSharedFlow<R>,
+    op: (
+      `1st`: T1,
+      `2nd`: T2,
+      `3rd`: T3,
+      `4th`: T4,
+      `5th`: T5,
+      `6th`: T6,
+      `7th`: T7,
+      `8th`: T8,
+      `9th`: T9,
+      `10th`: T10,
+      `11th`: T11,
+      `12th`: T12,
+    ) -> ((R) -> R),
+  ): Job = scope.launch {
+      gather().map {
+        it.throughGen(op)
+      }.collect {
+        to.update(it) 
       }
     }
 }
@@ -2709,7 +2925,7 @@ public class Input13<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13>(
 
   public fun <R> transform(
     scope: CoroutineScope,
-    to: FlowCollector<R>,
+    to: MutableSharedFlow<R>,
     op: (
       `1st`: T1,
       `2nd`: T2,
@@ -2735,7 +2951,7 @@ public class Input13<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13>(
 
   public fun <R> transformFilter(
     scope: CoroutineScope,
-    to: FlowCollector<R>,
+    to: MutableSharedFlow<R>,
     op: (
       `1st`: T1,
       `2nd`: T2,
@@ -2758,6 +2974,32 @@ public class Input13<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13>(
         if (it.shouldEmit) {
           to.emit(it.result)
         }
+      }
+    }
+
+  public fun <R> transformUpdate(
+    scope: CoroutineScope,
+    to: MutableSharedFlow<R>,
+    op: (
+      `1st`: T1,
+      `2nd`: T2,
+      `3rd`: T3,
+      `4th`: T4,
+      `5th`: T5,
+      `6th`: T6,
+      `7th`: T7,
+      `8th`: T8,
+      `9th`: T9,
+      `10th`: T10,
+      `11th`: T11,
+      `12th`: T12,
+      `13th`: T13,
+    ) -> ((R) -> R),
+  ): Job = scope.launch {
+      gather().map {
+        it.throughGen(op)
+      }.collect {
+        to.update(it) 
       }
     }
 }
@@ -2784,7 +3026,7 @@ public class Input14<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14
 
   public fun <R> transform(
     scope: CoroutineScope,
-    to: FlowCollector<R>,
+    to: MutableSharedFlow<R>,
     op: (
       `1st`: T1,
       `2nd`: T2,
@@ -2811,7 +3053,7 @@ public class Input14<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14
 
   public fun <R> transformFilter(
     scope: CoroutineScope,
-    to: FlowCollector<R>,
+    to: MutableSharedFlow<R>,
     op: (
       `1st`: T1,
       `2nd`: T2,
@@ -2835,6 +3077,33 @@ public class Input14<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14
         if (it.shouldEmit) {
           to.emit(it.result)
         }
+      }
+    }
+
+  public fun <R> transformUpdate(
+    scope: CoroutineScope,
+    to: MutableSharedFlow<R>,
+    op: (
+      `1st`: T1,
+      `2nd`: T2,
+      `3rd`: T3,
+      `4th`: T4,
+      `5th`: T5,
+      `6th`: T6,
+      `7th`: T7,
+      `8th`: T8,
+      `9th`: T9,
+      `10th`: T10,
+      `11th`: T11,
+      `12th`: T12,
+      `13th`: T13,
+      `14th`: T14,
+    ) -> ((R) -> R),
+  ): Job = scope.launch {
+      gather().map {
+        it.throughGen(op)
+      }.collect {
+        to.update(it) 
       }
     }
 }
@@ -2862,7 +3131,7 @@ public class Input15<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14
 
   public fun <R> transform(
     scope: CoroutineScope,
-    to: FlowCollector<R>,
+    to: MutableSharedFlow<R>,
     op: (
       `1st`: T1,
       `2nd`: T2,
@@ -2890,7 +3159,7 @@ public class Input15<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14
 
   public fun <R> transformFilter(
     scope: CoroutineScope,
-    to: FlowCollector<R>,
+    to: MutableSharedFlow<R>,
     op: (
       `1st`: T1,
       `2nd`: T2,
@@ -2915,6 +3184,34 @@ public class Input15<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14
         if (it.shouldEmit) {
           to.emit(it.result)
         }
+      }
+    }
+
+  public fun <R> transformUpdate(
+    scope: CoroutineScope,
+    to: MutableSharedFlow<R>,
+    op: (
+      `1st`: T1,
+      `2nd`: T2,
+      `3rd`: T3,
+      `4th`: T4,
+      `5th`: T5,
+      `6th`: T6,
+      `7th`: T7,
+      `8th`: T8,
+      `9th`: T9,
+      `10th`: T10,
+      `11th`: T11,
+      `12th`: T12,
+      `13th`: T13,
+      `14th`: T14,
+      `15th`: T15,
+    ) -> ((R) -> R),
+  ): Job = scope.launch {
+      gather().map {
+        it.throughGen(op)
+      }.collect {
+        to.update(it) 
       }
     }
 }
@@ -2943,7 +3240,7 @@ public class Input16<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14
 
   public fun <R> transform(
     scope: CoroutineScope,
-    to: FlowCollector<R>,
+    to: MutableSharedFlow<R>,
     op: (
       `1st`: T1,
       `2nd`: T2,
@@ -2972,7 +3269,7 @@ public class Input16<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14
 
   public fun <R> transformFilter(
     scope: CoroutineScope,
-    to: FlowCollector<R>,
+    to: MutableSharedFlow<R>,
     op: (
       `1st`: T1,
       `2nd`: T2,
@@ -2998,6 +3295,35 @@ public class Input16<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14
         if (it.shouldEmit) {
           to.emit(it.result)
         }
+      }
+    }
+
+  public fun <R> transformUpdate(
+    scope: CoroutineScope,
+    to: MutableSharedFlow<R>,
+    op: (
+      `1st`: T1,
+      `2nd`: T2,
+      `3rd`: T3,
+      `4th`: T4,
+      `5th`: T5,
+      `6th`: T6,
+      `7th`: T7,
+      `8th`: T8,
+      `9th`: T9,
+      `10th`: T10,
+      `11th`: T11,
+      `12th`: T12,
+      `13th`: T13,
+      `14th`: T14,
+      `15th`: T15,
+      `16th`: T16,
+    ) -> ((R) -> R),
+  ): Job = scope.launch {
+      gather().map {
+        it.throughGen(op)
+      }.collect {
+        to.update(it) 
       }
     }
 }
@@ -3027,7 +3353,7 @@ public class Input17<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14
 
   public fun <R> transform(
     scope: CoroutineScope,
-    to: FlowCollector<R>,
+    to: MutableSharedFlow<R>,
     op: (
       `1st`: T1,
       `2nd`: T2,
@@ -3057,7 +3383,7 @@ public class Input17<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14
 
   public fun <R> transformFilter(
     scope: CoroutineScope,
-    to: FlowCollector<R>,
+    to: MutableSharedFlow<R>,
     op: (
       `1st`: T1,
       `2nd`: T2,
@@ -3084,6 +3410,36 @@ public class Input17<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14
         if (it.shouldEmit) {
           to.emit(it.result)
         }
+      }
+    }
+
+  public fun <R> transformUpdate(
+    scope: CoroutineScope,
+    to: MutableSharedFlow<R>,
+    op: (
+      `1st`: T1,
+      `2nd`: T2,
+      `3rd`: T3,
+      `4th`: T4,
+      `5th`: T5,
+      `6th`: T6,
+      `7th`: T7,
+      `8th`: T8,
+      `9th`: T9,
+      `10th`: T10,
+      `11th`: T11,
+      `12th`: T12,
+      `13th`: T13,
+      `14th`: T14,
+      `15th`: T15,
+      `16th`: T16,
+      `17th`: T17,
+    ) -> ((R) -> R),
+  ): Job = scope.launch {
+      gather().map {
+        it.throughGen(op)
+      }.collect {
+        to.update(it) 
       }
     }
 }
@@ -3116,7 +3472,7 @@ public class Input18<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14
 
   public fun <R> transform(
     scope: CoroutineScope,
-    to: FlowCollector<R>,
+    to: MutableSharedFlow<R>,
     op: (
       `1st`: T1,
       `2nd`: T2,
@@ -3147,7 +3503,7 @@ public class Input18<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14
 
   public fun <R> transformFilter(
     scope: CoroutineScope,
-    to: FlowCollector<R>,
+    to: MutableSharedFlow<R>,
     op: (
       `1st`: T1,
       `2nd`: T2,
@@ -3175,6 +3531,37 @@ public class Input18<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14
         if (it.shouldEmit) {
           to.emit(it.result)
         }
+      }
+    }
+
+  public fun <R> transformUpdate(
+    scope: CoroutineScope,
+    to: MutableSharedFlow<R>,
+    op: (
+      `1st`: T1,
+      `2nd`: T2,
+      `3rd`: T3,
+      `4th`: T4,
+      `5th`: T5,
+      `6th`: T6,
+      `7th`: T7,
+      `8th`: T8,
+      `9th`: T9,
+      `10th`: T10,
+      `11th`: T11,
+      `12th`: T12,
+      `13th`: T13,
+      `14th`: T14,
+      `15th`: T15,
+      `16th`: T16,
+      `17th`: T17,
+      `18th`: T18,
+    ) -> ((R) -> R),
+  ): Job = scope.launch {
+      gather().map {
+        it.throughGen(op)
+      }.collect {
+        to.update(it) 
       }
     }
 }
@@ -3208,7 +3595,7 @@ public class Input19<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14
 
   public fun <R> transform(
     scope: CoroutineScope,
-    to: FlowCollector<R>,
+    to: MutableSharedFlow<R>,
     op: (
       `1st`: T1,
       `2nd`: T2,
@@ -3240,7 +3627,7 @@ public class Input19<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14
 
   public fun <R> transformFilter(
     scope: CoroutineScope,
-    to: FlowCollector<R>,
+    to: MutableSharedFlow<R>,
     op: (
       `1st`: T1,
       `2nd`: T2,
@@ -3269,6 +3656,38 @@ public class Input19<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14
         if (it.shouldEmit) {
           to.emit(it.result)
         }
+      }
+    }
+
+  public fun <R> transformUpdate(
+    scope: CoroutineScope,
+    to: MutableSharedFlow<R>,
+    op: (
+      `1st`: T1,
+      `2nd`: T2,
+      `3rd`: T3,
+      `4th`: T4,
+      `5th`: T5,
+      `6th`: T6,
+      `7th`: T7,
+      `8th`: T8,
+      `9th`: T9,
+      `10th`: T10,
+      `11th`: T11,
+      `12th`: T12,
+      `13th`: T13,
+      `14th`: T14,
+      `15th`: T15,
+      `16th`: T16,
+      `17th`: T17,
+      `18th`: T18,
+      `19th`: T19,
+    ) -> ((R) -> R),
+  ): Job = scope.launch {
+      gather().map {
+        it.throughGen(op)
+      }.collect {
+        to.update(it) 
       }
     }
 }
@@ -3303,7 +3722,7 @@ public class Input20<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14
 
   public fun <R> transform(
     scope: CoroutineScope,
-    to: FlowCollector<R>,
+    to: MutableSharedFlow<R>,
     op: (
       `1st`: T1,
       `2nd`: T2,
@@ -3336,7 +3755,7 @@ public class Input20<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14
 
   public fun <R> transformFilter(
     scope: CoroutineScope,
-    to: FlowCollector<R>,
+    to: MutableSharedFlow<R>,
     op: (
       `1st`: T1,
       `2nd`: T2,
@@ -3368,10 +3787,43 @@ public class Input20<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14
         }
       }
     }
+
+  public fun <R> transformUpdate(
+    scope: CoroutineScope,
+    to: MutableSharedFlow<R>,
+    op: (
+      `1st`: T1,
+      `2nd`: T2,
+      `3rd`: T3,
+      `4th`: T4,
+      `5th`: T5,
+      `6th`: T6,
+      `7th`: T7,
+      `8th`: T8,
+      `9th`: T9,
+      `10th`: T10,
+      `11th`: T11,
+      `12th`: T12,
+      `13th`: T13,
+      `14th`: T14,
+      `15th`: T15,
+      `16th`: T16,
+      `17th`: T17,
+      `18th`: T18,
+      `19th`: T19,
+      `20th`: T20,
+    ) -> ((R) -> R),
+  ): Job = scope.launch {
+      gather().map {
+        it.throughGen(op)
+      }.collect {
+        to.update(it) 
+      }
+    }
 }
 
 /**
- * AUTOGEN(KotlinPoet) generateCoroutineOpNFn(2, false)
+ * AUTOGEN(KotlinPoet) generateCoroutineOpNFn(2)
  */
 public fun <T1, T2, R> CoroutineScope.op(
   inFlow1: InFlow<T1>,
@@ -3381,7 +3833,7 @@ public fun <T1, T2, R> CoroutineScope.op(
 ) = Input2(inFlow1, inFlow2).transform(this, out, transform)
 
 /**
- * AUTOGEN(KotlinPoet) generateCoroutineOpNFn(2, true)
+ * AUTOGEN(KotlinPoet) generateCoroutineOpNFn(2)
  */
 public fun <T1, T2, R> CoroutineScope.opp(
   inFlow1: InFlow<T1>,
@@ -3391,7 +3843,17 @@ public fun <T1, T2, R> CoroutineScope.opp(
 ) = Input2(inFlow1, inFlow2).transformFilter(this, out, transform)
 
 /**
- * AUTOGEN(KotlinPoet) generateCoroutineOpNFn(3, false)
+ * AUTOGEN(KotlinPoet) generateCoroutineOpNFn(2)
+ */
+public fun <T1, T2, R> CoroutineScope.up(
+  inFlow1: InFlow<T1>,
+  inFlow2: InFlow<T2>,
+  transform: (t1: T1, t2: T2) -> ((R) -> R),
+  `out`: MutableSharedFlow<R>,
+) = Input2(inFlow1, inFlow2).transformUpdate(this, out, transform)
+
+/**
+ * AUTOGEN(KotlinPoet) generateCoroutineOpNFn(3)
  */
 public fun <T1, T2, T3, R> CoroutineScope.op(
   inFlow1: InFlow<T1>,
@@ -3406,7 +3868,7 @@ public fun <T1, T2, T3, R> CoroutineScope.op(
 ) = Input3(inFlow1, inFlow2, inFlow3).transform(this, out, transform)
 
 /**
- * AUTOGEN(KotlinPoet) generateCoroutineOpNFn(3, true)
+ * AUTOGEN(KotlinPoet) generateCoroutineOpNFn(3)
  */
 public fun <T1, T2, T3, R> CoroutineScope.opp(
   inFlow1: InFlow<T1>,
@@ -3421,7 +3883,22 @@ public fun <T1, T2, T3, R> CoroutineScope.opp(
 ) = Input3(inFlow1, inFlow2, inFlow3).transformFilter(this, out, transform)
 
 /**
- * AUTOGEN(KotlinPoet) generateCoroutineOpNFn(4, false)
+ * AUTOGEN(KotlinPoet) generateCoroutineOpNFn(3)
+ */
+public fun <T1, T2, T3, R> CoroutineScope.up(
+  inFlow1: InFlow<T1>,
+  inFlow2: InFlow<T2>,
+  inFlow3: InFlow<T3>,
+  transform: (
+    t1: T1,
+    t2: T2,
+    t3: T3,
+  ) -> ((R) -> R),
+  `out`: MutableSharedFlow<R>,
+) = Input3(inFlow1, inFlow2, inFlow3).transformUpdate(this, out, transform)
+
+/**
+ * AUTOGEN(KotlinPoet) generateCoroutineOpNFn(4)
  */
 public fun <T1, T2, T3, T4, R> CoroutineScope.op(
   inFlow1: InFlow<T1>,
@@ -3438,7 +3915,7 @@ public fun <T1, T2, T3, T4, R> CoroutineScope.op(
 ) = Input4(inFlow1, inFlow2, inFlow3, inFlow4).transform(this, out, transform)
 
 /**
- * AUTOGEN(KotlinPoet) generateCoroutineOpNFn(4, true)
+ * AUTOGEN(KotlinPoet) generateCoroutineOpNFn(4)
  */
 public fun <T1, T2, T3, T4, R> CoroutineScope.opp(
   inFlow1: InFlow<T1>,
@@ -3455,7 +3932,24 @@ public fun <T1, T2, T3, T4, R> CoroutineScope.opp(
 ) = Input4(inFlow1, inFlow2, inFlow3, inFlow4).transformFilter(this, out, transform)
 
 /**
- * AUTOGEN(KotlinPoet) generateCoroutineOpNFn(5, false)
+ * AUTOGEN(KotlinPoet) generateCoroutineOpNFn(4)
+ */
+public fun <T1, T2, T3, T4, R> CoroutineScope.up(
+  inFlow1: InFlow<T1>,
+  inFlow2: InFlow<T2>,
+  inFlow3: InFlow<T3>,
+  inFlow4: InFlow<T4>,
+  transform: (
+    t1: T1,
+    t2: T2,
+    t3: T3,
+    t4: T4,
+  ) -> ((R) -> R),
+  `out`: MutableSharedFlow<R>,
+) = Input4(inFlow1, inFlow2, inFlow3, inFlow4).transformUpdate(this, out, transform)
+
+/**
+ * AUTOGEN(KotlinPoet) generateCoroutineOpNFn(5)
  */
 public fun <T1, T2, T3, T4, T5, R> CoroutineScope.op(
   inFlow1: InFlow<T1>,
@@ -3474,7 +3968,7 @@ public fun <T1, T2, T3, T4, T5, R> CoroutineScope.op(
 ) = Input5(inFlow1, inFlow2, inFlow3, inFlow4, inFlow5).transform(this, out, transform)
 
 /**
- * AUTOGEN(KotlinPoet) generateCoroutineOpNFn(5, true)
+ * AUTOGEN(KotlinPoet) generateCoroutineOpNFn(5)
  */
 public fun <T1, T2, T3, T4, T5, R> CoroutineScope.opp(
   inFlow1: InFlow<T1>,
@@ -3493,7 +3987,26 @@ public fun <T1, T2, T3, T4, T5, R> CoroutineScope.opp(
 ) = Input5(inFlow1, inFlow2, inFlow3, inFlow4, inFlow5).transformFilter(this, out, transform)
 
 /**
- * AUTOGEN(KotlinPoet) generateCoroutineOpNFn(6, false)
+ * AUTOGEN(KotlinPoet) generateCoroutineOpNFn(5)
+ */
+public fun <T1, T2, T3, T4, T5, R> CoroutineScope.up(
+  inFlow1: InFlow<T1>,
+  inFlow2: InFlow<T2>,
+  inFlow3: InFlow<T3>,
+  inFlow4: InFlow<T4>,
+  inFlow5: InFlow<T5>,
+  transform: (
+    t1: T1,
+    t2: T2,
+    t3: T3,
+    t4: T4,
+    t5: T5,
+  ) -> ((R) -> R),
+  `out`: MutableSharedFlow<R>,
+) = Input5(inFlow1, inFlow2, inFlow3, inFlow4, inFlow5).transformUpdate(this, out, transform)
+
+/**
+ * AUTOGEN(KotlinPoet) generateCoroutineOpNFn(6)
  */
 public fun <T1, T2, T3, T4, T5, T6, R> CoroutineScope.op(
   inFlow1: InFlow<T1>,
@@ -3514,7 +4027,7 @@ public fun <T1, T2, T3, T4, T5, T6, R> CoroutineScope.op(
 ) = Input6(inFlow1, inFlow2, inFlow3, inFlow4, inFlow5, inFlow6).transform(this, out, transform)
 
 /**
- * AUTOGEN(KotlinPoet) generateCoroutineOpNFn(6, true)
+ * AUTOGEN(KotlinPoet) generateCoroutineOpNFn(6)
  */
 public fun <T1, T2, T3, T4, T5, T6, R> CoroutineScope.opp(
   inFlow1: InFlow<T1>,
@@ -3536,7 +4049,29 @@ public fun <T1, T2, T3, T4, T5, T6, R> CoroutineScope.opp(
     transform)
 
 /**
- * AUTOGEN(KotlinPoet) generateCoroutineOpNFn(7, false)
+ * AUTOGEN(KotlinPoet) generateCoroutineOpNFn(6)
+ */
+public fun <T1, T2, T3, T4, T5, T6, R> CoroutineScope.up(
+  inFlow1: InFlow<T1>,
+  inFlow2: InFlow<T2>,
+  inFlow3: InFlow<T3>,
+  inFlow4: InFlow<T4>,
+  inFlow5: InFlow<T5>,
+  inFlow6: InFlow<T6>,
+  transform: (
+    t1: T1,
+    t2: T2,
+    t3: T3,
+    t4: T4,
+    t5: T5,
+    t6: T6,
+  ) -> ((R) -> R),
+  `out`: MutableSharedFlow<R>,
+) = Input6(inFlow1, inFlow2, inFlow3, inFlow4, inFlow5, inFlow6).transformUpdate(this, out,
+    transform)
+
+/**
+ * AUTOGEN(KotlinPoet) generateCoroutineOpNFn(7)
  */
 public fun <T1, T2, T3, T4, T5, T6, T7, R> CoroutineScope.op(
   inFlow1: InFlow<T1>,
@@ -3560,7 +4095,7 @@ public fun <T1, T2, T3, T4, T5, T6, T7, R> CoroutineScope.op(
     transform)
 
 /**
- * AUTOGEN(KotlinPoet) generateCoroutineOpNFn(7, true)
+ * AUTOGEN(KotlinPoet) generateCoroutineOpNFn(7)
  */
 public fun <T1, T2, T3, T4, T5, T6, T7, R> CoroutineScope.opp(
   inFlow1: InFlow<T1>,
@@ -3584,7 +4119,31 @@ public fun <T1, T2, T3, T4, T5, T6, T7, R> CoroutineScope.opp(
     transform)
 
 /**
- * AUTOGEN(KotlinPoet) generateCoroutineOpNFn(8, false)
+ * AUTOGEN(KotlinPoet) generateCoroutineOpNFn(7)
+ */
+public fun <T1, T2, T3, T4, T5, T6, T7, R> CoroutineScope.up(
+  inFlow1: InFlow<T1>,
+  inFlow2: InFlow<T2>,
+  inFlow3: InFlow<T3>,
+  inFlow4: InFlow<T4>,
+  inFlow5: InFlow<T5>,
+  inFlow6: InFlow<T6>,
+  inFlow7: InFlow<T7>,
+  transform: (
+    t1: T1,
+    t2: T2,
+    t3: T3,
+    t4: T4,
+    t5: T5,
+    t6: T6,
+    t7: T7,
+  ) -> ((R) -> R),
+  `out`: MutableSharedFlow<R>,
+) = Input7(inFlow1, inFlow2, inFlow3, inFlow4, inFlow5, inFlow6, inFlow7).transformUpdate(this, out,
+    transform)
+
+/**
+ * AUTOGEN(KotlinPoet) generateCoroutineOpNFn(8)
  */
 public fun <T1, T2, T3, T4, T5, T6, T7, T8, R> CoroutineScope.op(
   inFlow1: InFlow<T1>,
@@ -3610,7 +4169,7 @@ public fun <T1, T2, T3, T4, T5, T6, T7, T8, R> CoroutineScope.op(
     out, transform)
 
 /**
- * AUTOGEN(KotlinPoet) generateCoroutineOpNFn(8, true)
+ * AUTOGEN(KotlinPoet) generateCoroutineOpNFn(8)
  */
 public fun <T1, T2, T3, T4, T5, T6, T7, T8, R> CoroutineScope.opp(
   inFlow1: InFlow<T1>,
@@ -3636,7 +4195,33 @@ public fun <T1, T2, T3, T4, T5, T6, T7, T8, R> CoroutineScope.opp(
     inFlow8).transformFilter(this, out, transform)
 
 /**
- * AUTOGEN(KotlinPoet) generateCoroutineOpNFn(9, false)
+ * AUTOGEN(KotlinPoet) generateCoroutineOpNFn(8)
+ */
+public fun <T1, T2, T3, T4, T5, T6, T7, T8, R> CoroutineScope.up(
+  inFlow1: InFlow<T1>,
+  inFlow2: InFlow<T2>,
+  inFlow3: InFlow<T3>,
+  inFlow4: InFlow<T4>,
+  inFlow5: InFlow<T5>,
+  inFlow6: InFlow<T6>,
+  inFlow7: InFlow<T7>,
+  inFlow8: InFlow<T8>,
+  transform: (
+    t1: T1,
+    t2: T2,
+    t3: T3,
+    t4: T4,
+    t5: T5,
+    t6: T6,
+    t7: T7,
+    t8: T8,
+  ) -> ((R) -> R),
+  `out`: MutableSharedFlow<R>,
+) = Input8(inFlow1, inFlow2, inFlow3, inFlow4, inFlow5, inFlow6, inFlow7,
+    inFlow8).transformUpdate(this, out, transform)
+
+/**
+ * AUTOGEN(KotlinPoet) generateCoroutineOpNFn(9)
  */
 public fun <T1, T2, T3, T4, T5, T6, T7, T8, T9, R> CoroutineScope.op(
   inFlow1: InFlow<T1>,
@@ -3664,7 +4249,7 @@ public fun <T1, T2, T3, T4, T5, T6, T7, T8, T9, R> CoroutineScope.op(
     inFlow9).transform(this, out, transform)
 
 /**
- * AUTOGEN(KotlinPoet) generateCoroutineOpNFn(9, true)
+ * AUTOGEN(KotlinPoet) generateCoroutineOpNFn(9)
  */
 public fun <T1, T2, T3, T4, T5, T6, T7, T8, T9, R> CoroutineScope.opp(
   inFlow1: InFlow<T1>,
@@ -3692,7 +4277,35 @@ public fun <T1, T2, T3, T4, T5, T6, T7, T8, T9, R> CoroutineScope.opp(
     inFlow9).transformFilter(this, out, transform)
 
 /**
- * AUTOGEN(KotlinPoet) generateCoroutineOpNFn(10, false)
+ * AUTOGEN(KotlinPoet) generateCoroutineOpNFn(9)
+ */
+public fun <T1, T2, T3, T4, T5, T6, T7, T8, T9, R> CoroutineScope.up(
+  inFlow1: InFlow<T1>,
+  inFlow2: InFlow<T2>,
+  inFlow3: InFlow<T3>,
+  inFlow4: InFlow<T4>,
+  inFlow5: InFlow<T5>,
+  inFlow6: InFlow<T6>,
+  inFlow7: InFlow<T7>,
+  inFlow8: InFlow<T8>,
+  inFlow9: InFlow<T9>,
+  transform: (
+    t1: T1,
+    t2: T2,
+    t3: T3,
+    t4: T4,
+    t5: T5,
+    t6: T6,
+    t7: T7,
+    t8: T8,
+    t9: T9,
+  ) -> ((R) -> R),
+  `out`: MutableSharedFlow<R>,
+) = Input9(inFlow1, inFlow2, inFlow3, inFlow4, inFlow5, inFlow6, inFlow7, inFlow8,
+    inFlow9).transformUpdate(this, out, transform)
+
+/**
+ * AUTOGEN(KotlinPoet) generateCoroutineOpNFn(10)
  */
 public fun <T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, R> CoroutineScope.op(
   inFlow1: InFlow<T1>,
@@ -3722,7 +4335,7 @@ public fun <T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, R> CoroutineScope.op(
     inFlow10).transform(this, out, transform)
 
 /**
- * AUTOGEN(KotlinPoet) generateCoroutineOpNFn(10, true)
+ * AUTOGEN(KotlinPoet) generateCoroutineOpNFn(10)
  */
 public fun <T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, R> CoroutineScope.opp(
   inFlow1: InFlow<T1>,
@@ -3752,7 +4365,37 @@ public fun <T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, R> CoroutineScope.opp(
     inFlow10).transformFilter(this, out, transform)
 
 /**
- * AUTOGEN(KotlinPoet) generateCoroutineOpNFn(11, false)
+ * AUTOGEN(KotlinPoet) generateCoroutineOpNFn(10)
+ */
+public fun <T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, R> CoroutineScope.up(
+  inFlow1: InFlow<T1>,
+  inFlow2: InFlow<T2>,
+  inFlow3: InFlow<T3>,
+  inFlow4: InFlow<T4>,
+  inFlow5: InFlow<T5>,
+  inFlow6: InFlow<T6>,
+  inFlow7: InFlow<T7>,
+  inFlow8: InFlow<T8>,
+  inFlow9: InFlow<T9>,
+  inFlow10: InFlow<T10>,
+  transform: (
+    t1: T1,
+    t2: T2,
+    t3: T3,
+    t4: T4,
+    t5: T5,
+    t6: T6,
+    t7: T7,
+    t8: T8,
+    t9: T9,
+    t10: T10,
+  ) -> ((R) -> R),
+  `out`: MutableSharedFlow<R>,
+) = Input10(inFlow1, inFlow2, inFlow3, inFlow4, inFlow5, inFlow6, inFlow7, inFlow8, inFlow9,
+    inFlow10).transformUpdate(this, out, transform)
+
+/**
+ * AUTOGEN(KotlinPoet) generateCoroutineOpNFn(11)
  */
 public fun <T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, R> CoroutineScope.op(
   inFlow1: InFlow<T1>,
@@ -3784,7 +4427,7 @@ public fun <T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, R> CoroutineScope.op(
     inFlow10, inFlow11).transform(this, out, transform)
 
 /**
- * AUTOGEN(KotlinPoet) generateCoroutineOpNFn(11, true)
+ * AUTOGEN(KotlinPoet) generateCoroutineOpNFn(11)
  */
 public fun <T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, R> CoroutineScope.opp(
   inFlow1: InFlow<T1>,
@@ -3816,7 +4459,39 @@ public fun <T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, R> CoroutineScope.opp(
     inFlow10, inFlow11).transformFilter(this, out, transform)
 
 /**
- * AUTOGEN(KotlinPoet) generateCoroutineOpNFn(12, false)
+ * AUTOGEN(KotlinPoet) generateCoroutineOpNFn(11)
+ */
+public fun <T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, R> CoroutineScope.up(
+  inFlow1: InFlow<T1>,
+  inFlow2: InFlow<T2>,
+  inFlow3: InFlow<T3>,
+  inFlow4: InFlow<T4>,
+  inFlow5: InFlow<T5>,
+  inFlow6: InFlow<T6>,
+  inFlow7: InFlow<T7>,
+  inFlow8: InFlow<T8>,
+  inFlow9: InFlow<T9>,
+  inFlow10: InFlow<T10>,
+  inFlow11: InFlow<T11>,
+  transform: (
+    t1: T1,
+    t2: T2,
+    t3: T3,
+    t4: T4,
+    t5: T5,
+    t6: T6,
+    t7: T7,
+    t8: T8,
+    t9: T9,
+    t10: T10,
+    t11: T11,
+  ) -> ((R) -> R),
+  `out`: MutableSharedFlow<R>,
+) = Input11(inFlow1, inFlow2, inFlow3, inFlow4, inFlow5, inFlow6, inFlow7, inFlow8, inFlow9,
+    inFlow10, inFlow11).transformUpdate(this, out, transform)
+
+/**
+ * AUTOGEN(KotlinPoet) generateCoroutineOpNFn(12)
  */
 public fun <T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, R> CoroutineScope.op(
   inFlow1: InFlow<T1>,
@@ -3850,7 +4525,7 @@ public fun <T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, R> CoroutineScope
     inFlow10, inFlow11, inFlow12).transform(this, out, transform)
 
 /**
- * AUTOGEN(KotlinPoet) generateCoroutineOpNFn(12, true)
+ * AUTOGEN(KotlinPoet) generateCoroutineOpNFn(12)
  */
 public fun <T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, R> CoroutineScope.opp(
   inFlow1: InFlow<T1>,
@@ -3884,7 +4559,41 @@ public fun <T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, R> CoroutineScope
     inFlow10, inFlow11, inFlow12).transformFilter(this, out, transform)
 
 /**
- * AUTOGEN(KotlinPoet) generateCoroutineOpNFn(13, false)
+ * AUTOGEN(KotlinPoet) generateCoroutineOpNFn(12)
+ */
+public fun <T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, R> CoroutineScope.up(
+  inFlow1: InFlow<T1>,
+  inFlow2: InFlow<T2>,
+  inFlow3: InFlow<T3>,
+  inFlow4: InFlow<T4>,
+  inFlow5: InFlow<T5>,
+  inFlow6: InFlow<T6>,
+  inFlow7: InFlow<T7>,
+  inFlow8: InFlow<T8>,
+  inFlow9: InFlow<T9>,
+  inFlow10: InFlow<T10>,
+  inFlow11: InFlow<T11>,
+  inFlow12: InFlow<T12>,
+  transform: (
+    t1: T1,
+    t2: T2,
+    t3: T3,
+    t4: T4,
+    t5: T5,
+    t6: T6,
+    t7: T7,
+    t8: T8,
+    t9: T9,
+    t10: T10,
+    t11: T11,
+    t12: T12,
+  ) -> ((R) -> R),
+  `out`: MutableSharedFlow<R>,
+) = Input12(inFlow1, inFlow2, inFlow3, inFlow4, inFlow5, inFlow6, inFlow7, inFlow8, inFlow9,
+    inFlow10, inFlow11, inFlow12).transformUpdate(this, out, transform)
+
+/**
+ * AUTOGEN(KotlinPoet) generateCoroutineOpNFn(13)
  */
 public fun <T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, R> CoroutineScope.op(
   inFlow1: InFlow<T1>,
@@ -3920,7 +4629,7 @@ public fun <T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, R> Coroutine
     inFlow10, inFlow11, inFlow12, inFlow13).transform(this, out, transform)
 
 /**
- * AUTOGEN(KotlinPoet) generateCoroutineOpNFn(13, true)
+ * AUTOGEN(KotlinPoet) generateCoroutineOpNFn(13)
  */
 public fun <T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, R> CoroutineScope.opp(
   inFlow1: InFlow<T1>,
@@ -3956,7 +4665,43 @@ public fun <T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, R> Coroutine
     inFlow10, inFlow11, inFlow12, inFlow13).transformFilter(this, out, transform)
 
 /**
- * AUTOGEN(KotlinPoet) generateCoroutineOpNFn(14, false)
+ * AUTOGEN(KotlinPoet) generateCoroutineOpNFn(13)
+ */
+public fun <T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, R> CoroutineScope.up(
+  inFlow1: InFlow<T1>,
+  inFlow2: InFlow<T2>,
+  inFlow3: InFlow<T3>,
+  inFlow4: InFlow<T4>,
+  inFlow5: InFlow<T5>,
+  inFlow6: InFlow<T6>,
+  inFlow7: InFlow<T7>,
+  inFlow8: InFlow<T8>,
+  inFlow9: InFlow<T9>,
+  inFlow10: InFlow<T10>,
+  inFlow11: InFlow<T11>,
+  inFlow12: InFlow<T12>,
+  inFlow13: InFlow<T13>,
+  transform: (
+    t1: T1,
+    t2: T2,
+    t3: T3,
+    t4: T4,
+    t5: T5,
+    t6: T6,
+    t7: T7,
+    t8: T8,
+    t9: T9,
+    t10: T10,
+    t11: T11,
+    t12: T12,
+    t13: T13,
+  ) -> ((R) -> R),
+  `out`: MutableSharedFlow<R>,
+) = Input13(inFlow1, inFlow2, inFlow3, inFlow4, inFlow5, inFlow6, inFlow7, inFlow8, inFlow9,
+    inFlow10, inFlow11, inFlow12, inFlow13).transformUpdate(this, out, transform)
+
+/**
+ * AUTOGEN(KotlinPoet) generateCoroutineOpNFn(14)
  */
 public fun <T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, R> CoroutineScope.op(
   inFlow1: InFlow<T1>,
@@ -3994,7 +4739,7 @@ public fun <T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, R> Coro
     inFlow10, inFlow11, inFlow12, inFlow13, inFlow14).transform(this, out, transform)
 
 /**
- * AUTOGEN(KotlinPoet) generateCoroutineOpNFn(14, true)
+ * AUTOGEN(KotlinPoet) generateCoroutineOpNFn(14)
  */
 public fun <T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, R> CoroutineScope.opp(
   inFlow1: InFlow<T1>,
@@ -4032,7 +4777,45 @@ public fun <T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, R> Coro
     inFlow10, inFlow11, inFlow12, inFlow13, inFlow14).transformFilter(this, out, transform)
 
 /**
- * AUTOGEN(KotlinPoet) generateCoroutineOpNFn(15, false)
+ * AUTOGEN(KotlinPoet) generateCoroutineOpNFn(14)
+ */
+public fun <T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, R> CoroutineScope.up(
+  inFlow1: InFlow<T1>,
+  inFlow2: InFlow<T2>,
+  inFlow3: InFlow<T3>,
+  inFlow4: InFlow<T4>,
+  inFlow5: InFlow<T5>,
+  inFlow6: InFlow<T6>,
+  inFlow7: InFlow<T7>,
+  inFlow8: InFlow<T8>,
+  inFlow9: InFlow<T9>,
+  inFlow10: InFlow<T10>,
+  inFlow11: InFlow<T11>,
+  inFlow12: InFlow<T12>,
+  inFlow13: InFlow<T13>,
+  inFlow14: InFlow<T14>,
+  transform: (
+    t1: T1,
+    t2: T2,
+    t3: T3,
+    t4: T4,
+    t5: T5,
+    t6: T6,
+    t7: T7,
+    t8: T8,
+    t9: T9,
+    t10: T10,
+    t11: T11,
+    t12: T12,
+    t13: T13,
+    t14: T14,
+  ) -> ((R) -> R),
+  `out`: MutableSharedFlow<R>,
+) = Input14(inFlow1, inFlow2, inFlow3, inFlow4, inFlow5, inFlow6, inFlow7, inFlow8, inFlow9,
+    inFlow10, inFlow11, inFlow12, inFlow13, inFlow14).transformUpdate(this, out, transform)
+
+/**
+ * AUTOGEN(KotlinPoet) generateCoroutineOpNFn(15)
  */
 public fun <T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, R> CoroutineScope.op(
   inFlow1: InFlow<T1>,
@@ -4072,7 +4855,7 @@ public fun <T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, R>
     inFlow10, inFlow11, inFlow12, inFlow13, inFlow14, inFlow15).transform(this, out, transform)
 
 /**
- * AUTOGEN(KotlinPoet) generateCoroutineOpNFn(15, true)
+ * AUTOGEN(KotlinPoet) generateCoroutineOpNFn(15)
  */
 public fun <T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, R> CoroutineScope.opp(
   inFlow1: InFlow<T1>,
@@ -4113,7 +4896,48 @@ public fun <T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, R>
     transform)
 
 /**
- * AUTOGEN(KotlinPoet) generateCoroutineOpNFn(16, false)
+ * AUTOGEN(KotlinPoet) generateCoroutineOpNFn(15)
+ */
+public fun <T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, R> CoroutineScope.up(
+  inFlow1: InFlow<T1>,
+  inFlow2: InFlow<T2>,
+  inFlow3: InFlow<T3>,
+  inFlow4: InFlow<T4>,
+  inFlow5: InFlow<T5>,
+  inFlow6: InFlow<T6>,
+  inFlow7: InFlow<T7>,
+  inFlow8: InFlow<T8>,
+  inFlow9: InFlow<T9>,
+  inFlow10: InFlow<T10>,
+  inFlow11: InFlow<T11>,
+  inFlow12: InFlow<T12>,
+  inFlow13: InFlow<T13>,
+  inFlow14: InFlow<T14>,
+  inFlow15: InFlow<T15>,
+  transform: (
+    t1: T1,
+    t2: T2,
+    t3: T3,
+    t4: T4,
+    t5: T5,
+    t6: T6,
+    t7: T7,
+    t8: T8,
+    t9: T9,
+    t10: T10,
+    t11: T11,
+    t12: T12,
+    t13: T13,
+    t14: T14,
+    t15: T15,
+  ) -> ((R) -> R),
+  `out`: MutableSharedFlow<R>,
+) = Input15(inFlow1, inFlow2, inFlow3, inFlow4, inFlow5, inFlow6, inFlow7, inFlow8, inFlow9,
+    inFlow10, inFlow11, inFlow12, inFlow13, inFlow14, inFlow15).transformUpdate(this, out,
+    transform)
+
+/**
+ * AUTOGEN(KotlinPoet) generateCoroutineOpNFn(16)
  */
 public fun <T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, R>
     CoroutineScope.op(
@@ -4157,7 +4981,7 @@ public fun <T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T1
     transform)
 
 /**
- * AUTOGEN(KotlinPoet) generateCoroutineOpNFn(16, true)
+ * AUTOGEN(KotlinPoet) generateCoroutineOpNFn(16)
  */
 public fun <T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, R>
     CoroutineScope.opp(
@@ -4201,7 +5025,51 @@ public fun <T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T1
     transform)
 
 /**
- * AUTOGEN(KotlinPoet) generateCoroutineOpNFn(17, false)
+ * AUTOGEN(KotlinPoet) generateCoroutineOpNFn(16)
+ */
+public fun <T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, R>
+    CoroutineScope.up(
+  inFlow1: InFlow<T1>,
+  inFlow2: InFlow<T2>,
+  inFlow3: InFlow<T3>,
+  inFlow4: InFlow<T4>,
+  inFlow5: InFlow<T5>,
+  inFlow6: InFlow<T6>,
+  inFlow7: InFlow<T7>,
+  inFlow8: InFlow<T8>,
+  inFlow9: InFlow<T9>,
+  inFlow10: InFlow<T10>,
+  inFlow11: InFlow<T11>,
+  inFlow12: InFlow<T12>,
+  inFlow13: InFlow<T13>,
+  inFlow14: InFlow<T14>,
+  inFlow15: InFlow<T15>,
+  inFlow16: InFlow<T16>,
+  transform: (
+    t1: T1,
+    t2: T2,
+    t3: T3,
+    t4: T4,
+    t5: T5,
+    t6: T6,
+    t7: T7,
+    t8: T8,
+    t9: T9,
+    t10: T10,
+    t11: T11,
+    t12: T12,
+    t13: T13,
+    t14: T14,
+    t15: T15,
+    t16: T16,
+  ) -> ((R) -> R),
+  `out`: MutableSharedFlow<R>,
+) = Input16(inFlow1, inFlow2, inFlow3, inFlow4, inFlow5, inFlow6, inFlow7, inFlow8, inFlow9,
+    inFlow10, inFlow11, inFlow12, inFlow13, inFlow14, inFlow15, inFlow16).transformUpdate(this, out,
+    transform)
+
+/**
+ * AUTOGEN(KotlinPoet) generateCoroutineOpNFn(17)
  */
 public fun <T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, R>
     CoroutineScope.op(
@@ -4247,7 +5115,7 @@ public fun <T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T1
     out, transform)
 
 /**
- * AUTOGEN(KotlinPoet) generateCoroutineOpNFn(17, true)
+ * AUTOGEN(KotlinPoet) generateCoroutineOpNFn(17)
  */
 public fun <T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, R>
     CoroutineScope.opp(
@@ -4293,7 +5161,53 @@ public fun <T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T1
     inFlow17).transformFilter(this, out, transform)
 
 /**
- * AUTOGEN(KotlinPoet) generateCoroutineOpNFn(18, false)
+ * AUTOGEN(KotlinPoet) generateCoroutineOpNFn(17)
+ */
+public fun <T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, R>
+    CoroutineScope.up(
+  inFlow1: InFlow<T1>,
+  inFlow2: InFlow<T2>,
+  inFlow3: InFlow<T3>,
+  inFlow4: InFlow<T4>,
+  inFlow5: InFlow<T5>,
+  inFlow6: InFlow<T6>,
+  inFlow7: InFlow<T7>,
+  inFlow8: InFlow<T8>,
+  inFlow9: InFlow<T9>,
+  inFlow10: InFlow<T10>,
+  inFlow11: InFlow<T11>,
+  inFlow12: InFlow<T12>,
+  inFlow13: InFlow<T13>,
+  inFlow14: InFlow<T14>,
+  inFlow15: InFlow<T15>,
+  inFlow16: InFlow<T16>,
+  inFlow17: InFlow<T17>,
+  transform: (
+    t1: T1,
+    t2: T2,
+    t3: T3,
+    t4: T4,
+    t5: T5,
+    t6: T6,
+    t7: T7,
+    t8: T8,
+    t9: T9,
+    t10: T10,
+    t11: T11,
+    t12: T12,
+    t13: T13,
+    t14: T14,
+    t15: T15,
+    t16: T16,
+    t17: T17,
+  ) -> ((R) -> R),
+  `out`: MutableSharedFlow<R>,
+) = Input17(inFlow1, inFlow2, inFlow3, inFlow4, inFlow5, inFlow6, inFlow7, inFlow8, inFlow9,
+    inFlow10, inFlow11, inFlow12, inFlow13, inFlow14, inFlow15, inFlow16,
+    inFlow17).transformUpdate(this, out, transform)
+
+/**
+ * AUTOGEN(KotlinPoet) generateCoroutineOpNFn(18)
  */
 public fun <T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, R>
     CoroutineScope.op(
@@ -4341,7 +5255,7 @@ public fun <T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T1
     inFlow18).transform(this, out, transform)
 
 /**
- * AUTOGEN(KotlinPoet) generateCoroutineOpNFn(18, true)
+ * AUTOGEN(KotlinPoet) generateCoroutineOpNFn(18)
  */
 public fun <T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, R>
     CoroutineScope.opp(
@@ -4389,7 +5303,55 @@ public fun <T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T1
     inFlow18).transformFilter(this, out, transform)
 
 /**
- * AUTOGEN(KotlinPoet) generateCoroutineOpNFn(19, false)
+ * AUTOGEN(KotlinPoet) generateCoroutineOpNFn(18)
+ */
+public fun <T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, R>
+    CoroutineScope.up(
+  inFlow1: InFlow<T1>,
+  inFlow2: InFlow<T2>,
+  inFlow3: InFlow<T3>,
+  inFlow4: InFlow<T4>,
+  inFlow5: InFlow<T5>,
+  inFlow6: InFlow<T6>,
+  inFlow7: InFlow<T7>,
+  inFlow8: InFlow<T8>,
+  inFlow9: InFlow<T9>,
+  inFlow10: InFlow<T10>,
+  inFlow11: InFlow<T11>,
+  inFlow12: InFlow<T12>,
+  inFlow13: InFlow<T13>,
+  inFlow14: InFlow<T14>,
+  inFlow15: InFlow<T15>,
+  inFlow16: InFlow<T16>,
+  inFlow17: InFlow<T17>,
+  inFlow18: InFlow<T18>,
+  transform: (
+    t1: T1,
+    t2: T2,
+    t3: T3,
+    t4: T4,
+    t5: T5,
+    t6: T6,
+    t7: T7,
+    t8: T8,
+    t9: T9,
+    t10: T10,
+    t11: T11,
+    t12: T12,
+    t13: T13,
+    t14: T14,
+    t15: T15,
+    t16: T16,
+    t17: T17,
+    t18: T18,
+  ) -> ((R) -> R),
+  `out`: MutableSharedFlow<R>,
+) = Input18(inFlow1, inFlow2, inFlow3, inFlow4, inFlow5, inFlow6, inFlow7, inFlow8, inFlow9,
+    inFlow10, inFlow11, inFlow12, inFlow13, inFlow14, inFlow15, inFlow16, inFlow17,
+    inFlow18).transformUpdate(this, out, transform)
+
+/**
+ * AUTOGEN(KotlinPoet) generateCoroutineOpNFn(19)
  */
 public fun <T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19, R>
     CoroutineScope.op(
@@ -4439,7 +5401,7 @@ public fun <T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T1
     inFlow19).transform(this, out, transform)
 
 /**
- * AUTOGEN(KotlinPoet) generateCoroutineOpNFn(19, true)
+ * AUTOGEN(KotlinPoet) generateCoroutineOpNFn(19)
  */
 public fun <T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19, R>
     CoroutineScope.opp(
@@ -4489,7 +5451,57 @@ public fun <T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T1
     inFlow19).transformFilter(this, out, transform)
 
 /**
- * AUTOGEN(KotlinPoet) generateCoroutineOpNFn(20, false)
+ * AUTOGEN(KotlinPoet) generateCoroutineOpNFn(19)
+ */
+public fun <T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19, R>
+    CoroutineScope.up(
+  inFlow1: InFlow<T1>,
+  inFlow2: InFlow<T2>,
+  inFlow3: InFlow<T3>,
+  inFlow4: InFlow<T4>,
+  inFlow5: InFlow<T5>,
+  inFlow6: InFlow<T6>,
+  inFlow7: InFlow<T7>,
+  inFlow8: InFlow<T8>,
+  inFlow9: InFlow<T9>,
+  inFlow10: InFlow<T10>,
+  inFlow11: InFlow<T11>,
+  inFlow12: InFlow<T12>,
+  inFlow13: InFlow<T13>,
+  inFlow14: InFlow<T14>,
+  inFlow15: InFlow<T15>,
+  inFlow16: InFlow<T16>,
+  inFlow17: InFlow<T17>,
+  inFlow18: InFlow<T18>,
+  inFlow19: InFlow<T19>,
+  transform: (
+    t1: T1,
+    t2: T2,
+    t3: T3,
+    t4: T4,
+    t5: T5,
+    t6: T6,
+    t7: T7,
+    t8: T8,
+    t9: T9,
+    t10: T10,
+    t11: T11,
+    t12: T12,
+    t13: T13,
+    t14: T14,
+    t15: T15,
+    t16: T16,
+    t17: T17,
+    t18: T18,
+    t19: T19,
+  ) -> ((R) -> R),
+  `out`: MutableSharedFlow<R>,
+) = Input19(inFlow1, inFlow2, inFlow3, inFlow4, inFlow5, inFlow6, inFlow7, inFlow8, inFlow9,
+    inFlow10, inFlow11, inFlow12, inFlow13, inFlow14, inFlow15, inFlow16, inFlow17, inFlow18,
+    inFlow19).transformUpdate(this, out, transform)
+
+/**
+ * AUTOGEN(KotlinPoet) generateCoroutineOpNFn(20)
  */
 public fun <T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19,
     T20, R> CoroutineScope.op(
@@ -4541,7 +5553,7 @@ public fun <T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T1
     inFlow19, inFlow20).transform(this, out, transform)
 
 /**
- * AUTOGEN(KotlinPoet) generateCoroutineOpNFn(20, true)
+ * AUTOGEN(KotlinPoet) generateCoroutineOpNFn(20)
  */
 public fun <T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19,
     T20, R> CoroutineScope.opp(
@@ -4591,3 +5603,55 @@ public fun <T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T1
 ) = Input20(inFlow1, inFlow2, inFlow3, inFlow4, inFlow5, inFlow6, inFlow7, inFlow8, inFlow9,
     inFlow10, inFlow11, inFlow12, inFlow13, inFlow14, inFlow15, inFlow16, inFlow17, inFlow18,
     inFlow19, inFlow20).transformFilter(this, out, transform)
+
+/**
+ * AUTOGEN(KotlinPoet) generateCoroutineOpNFn(20)
+ */
+public fun <T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19,
+    T20, R> CoroutineScope.up(
+  inFlow1: InFlow<T1>,
+  inFlow2: InFlow<T2>,
+  inFlow3: InFlow<T3>,
+  inFlow4: InFlow<T4>,
+  inFlow5: InFlow<T5>,
+  inFlow6: InFlow<T6>,
+  inFlow7: InFlow<T7>,
+  inFlow8: InFlow<T8>,
+  inFlow9: InFlow<T9>,
+  inFlow10: InFlow<T10>,
+  inFlow11: InFlow<T11>,
+  inFlow12: InFlow<T12>,
+  inFlow13: InFlow<T13>,
+  inFlow14: InFlow<T14>,
+  inFlow15: InFlow<T15>,
+  inFlow16: InFlow<T16>,
+  inFlow17: InFlow<T17>,
+  inFlow18: InFlow<T18>,
+  inFlow19: InFlow<T19>,
+  inFlow20: InFlow<T20>,
+  transform: (
+    t1: T1,
+    t2: T2,
+    t3: T3,
+    t4: T4,
+    t5: T5,
+    t6: T6,
+    t7: T7,
+    t8: T8,
+    t9: T9,
+    t10: T10,
+    t11: T11,
+    t12: T12,
+    t13: T13,
+    t14: T14,
+    t15: T15,
+    t16: T16,
+    t17: T17,
+    t18: T18,
+    t19: T19,
+    t20: T20,
+  ) -> ((R) -> R),
+  `out`: MutableSharedFlow<R>,
+) = Input20(inFlow1, inFlow2, inFlow3, inFlow4, inFlow5, inFlow6, inFlow7, inFlow8, inFlow9,
+    inFlow10, inFlow11, inFlow12, inFlow13, inFlow14, inFlow15, inFlow16, inFlow17, inFlow18,
+    inFlow19, inFlow20).transformUpdate(this, out, transform)
