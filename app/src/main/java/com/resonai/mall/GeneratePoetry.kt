@@ -150,18 +150,44 @@ fun generateCoroutineOpNFn(n: Int): List<FunSpec> {
             InFlow::class.asClassName().parameterizedBy(types[it - 1])
         ).build()
     }
-    val rToRType = LambdaTypeName.get(parameters =
-    listOf(ParameterSpec.builder("", rType).build()), returnType = rType)
+    val rToRType = LambdaTypeName.get(
+        parameters = listOf(ParameterSpec.builder("", rType).build()),
+        returnType = rType
+    )
+
+    val possibleRToRType = LambdaTypeName.get(
+        parameters = listOf(ParameterSpec.builder("", rType).build()),
+        returnType = PossibleResult::class.asClassName().parameterizedBy(rType)
+    )
+
     return mapOf(
-        "op" to Pair("transform", LambdaTypeName.get(
-            parameters = transformParams,
-            returnType = rType)),
-        "opp" to Pair("transformFilter", LambdaTypeName.get(
-            parameters = transformParams,
-            returnType = PossibleResult::class.asClassName().parameterizedBy(rType))),
-        "up" to Pair("transformUpdate", LambdaTypeName.get(
-            parameters = transformParams,
-            returnType = rToRType))
+        "op" to Pair(
+            "transform", LambdaTypeName.get(
+                parameters = transformParams,
+                returnType = rType
+            )
+        ),
+
+        "opp" to Pair(
+            "transformFilter", LambdaTypeName.get(
+                parameters = transformParams,
+                returnType = PossibleResult::class.asClassName().parameterizedBy(rType)
+            )
+        ),
+
+        "up" to Pair(
+            "transformUpdate", LambdaTypeName.get(
+                parameters = transformParams,
+                returnType = rToRType
+            )
+        ),
+
+        "upp" to Pair(
+            "transformUpdateFilter", LambdaTypeName.get(
+                parameters = transformParams,
+                returnType = possibleRToRType
+            )
+        ),
     ).map { (funName, transformNameAndOpParams) ->
         FunSpec.builder(funName)
             .receiver(CoroutineScope::class)
@@ -173,7 +199,8 @@ fun generateCoroutineOpNFn(n: Int): List<FunSpec> {
             .addTypeVariable(rType)
             .addParameters(inFlowParams)
             .addParameter(
-                ParameterSpec.builder("transform", transformNameAndOpParams.second).build())
+                ParameterSpec.builder("transform", transformNameAndOpParams.second).build()
+            )
             .addParameter(
                 ParameterSpec.builder(
                     "out",
@@ -331,24 +358,43 @@ fun generateInputsNClass(n: Int): TypeSpec {
     val transformParams = (1..n).map {
         ParameterSpec.builder(getOrdinal(it), types[it - 1]).build()
     }
-    val rToRType = LambdaTypeName.get(parameters =
-    listOf(ParameterSpec.builder("", rType).build()), returnType = rType)
+    val rToRType = LambdaTypeName.get(
+        parameters =
+        listOf(ParameterSpec.builder("", rType).build()), returnType = rType
+    )
+
+    val possibleRToRType = LambdaTypeName.get(
+        parameters = listOf(ParameterSpec.builder("", rType).build()),
+        returnType = PossibleResult::class.asClassName().parameterizedBy(rType)
+    )
 
     val transformMethods: Map<String, Pair<String, LambdaTypeName>> = mapOf(
-        "transform"
-                to Pair("        to.emit(it)\n",
-            LambdaTypeName.get(
-                parameters = transformParams, returnType = rType)),
-        "transformFilter"
-                to Pair("      if (it.shouldEmit) {\n        to.emit(it.result)\n      }\n",
-            LambdaTypeName.get(
+        "transform" to Pair(
+            first = "        to.emit(it)\n",
+            second = LambdaTypeName.get(parameters = transformParams, returnType = rType)
+        ),
+
+        "transformFilter" to Pair(
+            first = "      if (it.shouldEmit) {\n        to.emit(it.result)\n      }\n",
+            second = LambdaTypeName.get(
                 parameters = transformParams,
-                returnType = PossibleResult::class.asClassName().parameterizedBy(rType))),
-        "transformUpdate"
-                to Pair("      to.update(it) \n",
-            LambdaTypeName.get(
+                returnType = PossibleResult::class.asClassName().parameterizedBy(rType)
+            )
+        ),
+
+        "transformUpdate" to Pair(
+            first = "      to.update(it) \n",
+            second = LambdaTypeName.get(parameters = transformParams, returnType = rToRType)
+        ),
+
+        "transformUpdateFilter" to Pair(
+            first = "      to.possibleUpdate(it) \n",
+            second = LambdaTypeName.get(
                 parameters = transformParams,
-                returnType = rToRType)))
+                returnType = possibleRToRType
+            )
+        ),
+    )
 
     transformMethods.map { (funName, collectBodyAndOpParams) ->
         FunSpec.builder(funName)
@@ -380,8 +426,10 @@ fun generateInputsNClass(n: Int): TypeSpec {
                         "  }"
             )
             .build()
-    }.forEach { builder
-        .addFunction(it) }
+    }.forEach {
+        builder
+            .addFunction(it)
+    }
 
     return builder
         .build()
