@@ -31,6 +31,16 @@ inline fun <T> MutableSharedFlow<T>.update(function: (T) -> T) {
     }
 }
 
+inline fun <T> MutableSharedFlow<T>.possibleUpdate(function: (T) -> PossibleResult<T>) {
+    synchronized(this) {
+        val prevValue = value
+        val nextValue = function(prevValue)
+        if (nextValue.shouldEmit) {
+            tryEmit(nextValue.result)
+        }
+    }
+}
+
 val <T> SharedFlow<T>.value: T
     get() = replayCache.last()
 
