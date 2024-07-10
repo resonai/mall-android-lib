@@ -17,7 +17,6 @@ import com.squareup.kotlinpoet.asClassName
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.FlowCollector
 import kotlinx.coroutines.flow.MutableSharedFlow
 
 fun getOrdinal(n: Int): String {
@@ -189,7 +188,7 @@ fun generateCoroutineOpNFn(n: Int): List<FunSpec> {
             )
         ),
     ).map { (funName, transformNameAndOpParams) ->
-        FunSpec.builder(funName)
+        val funSpecBuilder = FunSpec.builder(funName)
             .receiver(CoroutineScope::class)
             .addKdoc(
                 "AUTOGEN(KotlinPoet) generateCoroutineOpNFn(%L)",
@@ -201,16 +200,26 @@ fun generateCoroutineOpNFn(n: Int): List<FunSpec> {
             .addParameter(
                 ParameterSpec.builder("transform", transformNameAndOpParams.second).build()
             )
-            .addParameter(
+
+        repeat(MAX_OUTPUTS) { count ->
+            funSpecBuilder.addParameter(
                 ParameterSpec.builder(
-                    "out",
+                    name = "out$count",
                     MutableSharedFlow::class.asClassName().parameterizedBy(rType)
                 ).build()
             )
-            .addStatement(
-                "return Input$n(${(1..n).joinToString(", ") { "inFlow$it" }})" +
-                        ".${transformNameAndOpParams.first}(this, out, transform)"
-            ).build()
+        }
+
+        val outputStatements = (0 until MAX_OUTPUTS).joinToString("") { count ->
+            "to$count = out$count, "
+        }
+
+        funSpecBuilder.addStatement(
+            "return Input$n(${(1..n).joinToString(", ") { "inFlow$it" }})" +
+                    ".${transformNameAndOpParams.first}(scope = this, op = transform, $outputStatements)"
+        )
+
+        funSpecBuilder.build()
     }
 }
 
@@ -358,6 +367,7 @@ fun generateInputsNClass(n: Int): TypeSpec {
     val transformParams = (1..n).map {
         ParameterSpec.builder(getOrdinal(it), types[it - 1]).build()
     }
+
     val rToRType = LambdaTypeName.get(
         parameters =
         listOf(ParameterSpec.builder("", rType).build()), returnType = rType
@@ -370,7 +380,7 @@ fun generateInputsNClass(n: Int): TypeSpec {
 
     val transformMethods: Map<String, Pair<String, LambdaTypeName>> = mapOf(
         "transform" to Pair(
-            first = "        to.emit(it)\n",
+            first = "emit(it)\n",
             second = LambdaTypeName.get(parameters = transformParams, returnType = rType)
         ),
 
@@ -383,12 +393,12 @@ fun generateInputsNClass(n: Int): TypeSpec {
         ),
 
         "transformUpdate" to Pair(
-            first = "      to.update(it) \n",
+            first = "update(it) \n",
             second = LambdaTypeName.get(parameters = transformParams, returnType = rToRType)
         ),
 
         "transformUpdateFilter" to Pair(
-            first = "      to.possibleUpdate(it) \n",
+            first = "possibleUpdate(it) \n",
             second = LambdaTypeName.get(
                 parameters = transformParams,
                 returnType = possibleRToRType
@@ -397,7 +407,7 @@ fun generateInputsNClass(n: Int): TypeSpec {
     )
 
     transformMethods.map { (funName, collectBodyAndOpParams) ->
-        FunSpec.builder(funName)
+        val specBuilder = FunSpec.builder(funName)
             .addTypeVariable(rType)
             .addParameter(
                 ParameterSpec.builder(
@@ -405,27 +415,57 @@ fun generateInputsNClass(n: Int): TypeSpec {
                     CoroutineScope::class.asClassName()
                 ).build()
             )
-            .addParameter(
-                ParameterSpec.builder(
-                    "to",
-                    MutableSharedFlow::class.asClassName().parameterizedBy(rType)
-                ).build()
-            )
             .addParameter(ParameterSpec.builder("op", collectBodyAndOpParams.second).build())
-            .returns(Job::class.asClassName())
+
+        repeat(MAX_OUTPUTS) { count ->
+            if (count == 0) {
+                specBuilder.addParameter(
+                    ParameterSpec.builder(
+                        "to0",
+                        MutableSharedFlow::class.asClassName().parameterizedBy(rType)
+                    ).build()
+                )
+
+            } else {
+                specBuilder.addParameter(
+                    ParameterSpec.builder(
+                        "to$count",
+                        MutableSharedFlow::class.asClassName().parameterizedBy(rType).copy(true)
+                    ).defaultValue("null").build()
+                )
+            }
+        }
+
+        val outputStatements = if (funName == "transformFilter") {
+            val statements = (0 until MAX_OUTPUTS).joinToString("") { count ->
+                if (count == 0) {
+                    "      to0.emit(it.result)\n"
+                } else {
+                    "      to$count?.emit(it.result)\n"
+                }
+            }
+
+            "      if (it.shouldEmit) {\n$statements\n}\n"
+        } else {
+            (0 until MAX_OUTPUTS).joinToString("") { count ->
+                if (count == 0) {
+                    "      to0.${collectBodyAndOpParams.first}"
+                } else {
+                    "      to$count?.${collectBodyAndOpParams.first}"
+                }
+            }
+        }
+
+        specBuilder.returns(Job::class.asClassName())
             .addStatement(
                 "return scope.launch {\n" +
                         "    gather().map {\n" +
                         "      it.throughGen(op)\n" +
                         "    }.collect {\n" +
-                        // TODO(ShirL) We may be able to save ourselves some code by using
-                        // the built-in transform function, which behaves like map+filter
-                        // https://kotlinlang.org/api/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines.flow/transform.html
-                        collectBodyAndOpParams.first +
+                        outputStatements +
                         "    }\n" +
                         "  }"
-            )
-            .build()
+            ).build()
     }.forEach {
         builder
             .addFunction(it)
@@ -437,6 +477,7 @@ fun generateInputsNClass(n: Int): TypeSpec {
 
 var MAX_INPUTS = 20
 var MIN_INPUTS = 2
+var MAX_OUTPUTS = 4
 
 fun main() {
     generateFile()
@@ -458,9 +499,11 @@ private fun generateFile() {
     for (n in MIN_INPUTS..MAX_INPUTS) {
         file.addFunction(generateCombinerTupleNFn(n, "zip"))
     }
+
     for (n in MIN_INPUTS..MAX_INPUTS) {
         file.addFunction(generateTupleNFnThrough(n))
     }
+
     for (n in MIN_INPUTS..MAX_INPUTS) {
         file.addType(generateInputsBuilderNClass(n, MAX_INPUTS))
     }
